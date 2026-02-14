@@ -13,9 +13,19 @@ int enemymove(WINDOW *screen,struct enemy *en)
     if((en->is_dead)==false)
     {
     //important ascii codes:
-    //547     - wooden color box
-    //4194424 - side panels box
-    //4194417 - top and bottom panels box
+    /*
+        r 370
+        # 547
+        g 871
+        @ 1088
+        s 1395
+        w 1655
+        d 1892
+        * 2090
+        T 2388
+        4194424 - side panels box
+        4194417 - top and bottom panels box
+    */
         switch((rand()%50)+1)
         {   //cases 1-10 movement 30-40 atack action
             case 1: //left
@@ -23,6 +33,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
             en->e_symb=mvwinch(screen,en->ey,en->ex-1);
             if((en->e_symb)==4194424) break;
             else if((en->e_symb)==547) break;
+            else if((en->e_symb)==2388) break;
+            else if((en->e_symb)==1395) break;
             else
             {
                 mvwaddch(screen,en->ey,en->ex,' ');
@@ -35,6 +47,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
             en->e_symb=mvwinch(screen,en->ey-1,en->ex);
             if((en->e_symb)==4194417) break;
             else if((en->e_symb)==547) break;
+            else if((en->e_symb)==2388) break;
+            else if((en->e_symb)==1395) break;
             else
             {
                 mvwaddch(screen,en->ey,en->ex,' ');
@@ -47,6 +61,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
             en->e_symb=mvwinch(screen,en->ey+1,en->ex);
             if((en->e_symb)==4194417) break;
             else if((en->e_symb)==547) break;
+            else if((en->e_symb)==2388) break;
+            else if((en->e_symb)==1395) break;
             else
             {
                 mvwaddch(screen,en->ey,en->ex,' ');
@@ -59,6 +75,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
             en->e_symb=mvwinch(screen,en->ey,en->ex+1);
             if((en->e_symb)==4194424) break;
             else if((en->e_symb)==547) break;
+            else if((en->e_symb)==2388) break;
+            else if((en->e_symb)==1395) break;
             else
             {
                 mvwaddch(screen,en->ey,en->ex,' ');
@@ -93,6 +111,31 @@ int enemymove(WINDOW *screen,struct enemy *en)
                         en->fireball_dir=en->dir;
                         en->is_shooting=false;
                     }
+                    else if(symb==547)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x+1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1395)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x+1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==2388)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x+1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1088)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x+1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                        en->is_hit=true;
+                    }
                     else
                     {
                         if((en->fireball_x+1)!=(en->ex))
@@ -112,6 +155,31 @@ int enemymove(WINDOW *screen,struct enemy *en)
                         mvwaddch(screen,en->fireball_y+1,en->fireball_x,' ');
                         en->fireball_dir=en->dir;
                         en->is_shooting=false;
+                    }
+                    else if(symb==547)
+                    {
+                        mvwaddch(screen,en->fireball_y+1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1395)
+                    {
+                        mvwaddch(screen,en->fireball_y+1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==2388)
+                    {
+                        mvwaddch(screen,en->fireball_y+1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1088)
+                    {
+                        mvwaddch(screen,en->fireball_y+1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                        en->is_hit=true;
                     }
                     else
                     {
@@ -134,6 +202,31 @@ int enemymove(WINDOW *screen,struct enemy *en)
                         en->fireball_dir=en->dir;
                         en->is_shooting=false;
                     }
+                    else if(symb==547)
+                    {
+                        mvwaddch(screen,en->fireball_y-1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1395)
+                    {
+                        mvwaddch(screen,en->fireball_y-1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==2388)
+                    {
+                        mvwaddch(screen,en->fireball_y-1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1088)
+                    {
+                        mvwaddch(screen,en->fireball_y-1,en->fireball_x,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                        en->is_hit=true;
+                    }
                     else
                     {
                         if((en->fireball_y-1)!=(en->ey))
@@ -154,6 +247,31 @@ int enemymove(WINDOW *screen,struct enemy *en)
                         mvwaddch(screen,en->fireball_y,en->fireball_x-1,' ');
                         en->fireball_dir=en->dir;
                         en->is_shooting=false;
+                    }
+                    else if(symb==547)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x-1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1395)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x-1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==2388)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x-1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                    }
+                    else if(symb==1088)
+                    {
+                        mvwaddch(screen,en->fireball_y,en->fireball_x-1,' ');
+                        en->fireball_dir=en->dir;
+                        en->is_shooting=false;
+                        en->is_hit=true;
                     }
                     else
                     {
@@ -210,69 +328,33 @@ int enemymove(WINDOW *screen,struct enemy *en)
             }
             return 1;
     }
+    {
     return 0;
+    }
 }
 
-/*
-if((en->fireball_dir)==1)
-            {
-                en->fireball_y-=1;
-                mvwinch(screen,en->fireball_y,en->fireball_x);
-                if(symb==4194424)
-                {
-                    en->is_shooting=false;
-                }
-                else
-                {
-
-                    mvwaddch(screen,en->fireball_y+1,en->fireball_x,' ');
-                    wrefresh(screen);
-                    mvwaddch(screen,en->fireball_y,en->fireball_x,'-');
-                }
-            }
-            else if((en->fireball_dir)==2)
-            {
-                en->fireball_x-1;
-                mvwinch(screen,en->fireball_y,en->fireball_x);
-                if(symb==4194417)
-                {
-                    en->is_shooting=false;
-                }
-                else
-                {
-                    mvwaddch(screen,en->fireball_y,en->fireball_x+1,' ');
-                    wrefresh(screen);
-                    mvwaddch(screen,en->fireball_y,en->fireball_x,'|');
-                }
-            }
-            else if((en->fireball_dir)==3)
-            {
-                en->fireball_y+1;
-                mvwinch(screen,en->fireball_y,en->fireball_x);
-                if(symb==4194417)
-                {
-                    en->is_shooting=false;
-                }
-                else
-                {
-                    mvwaddch(screen,en->fireball_y-1,en->fireball_x,' ');
-                    wrefresh(screen);
-                    mvwaddch(screen,en->fireball_y,en->fireball_x,'|');
-                }
-            }
-            else if((en->fireball_dir)==4)
-            {
-                en->fireball_x+1;
-                mvwinch(screen,en->fireball_y,en->fireball_x);
-                if(symb==4194417)
-                {
-                    en->is_shooting=false;
-                }
-                else
-                {
-                    mvwaddch(screen,en->fireball_y,en->fireball_x-1,' ');
-                    wrefresh(screen);
-                    mvwaddch(screen,en->fireball_y,en->fireball_x,'-');
-                }
-            }
-*/
+int enemyinit(WINDOW *screen,struct enemy *en,int n)
+{
+    if(n==0)
+    {
+        en->symb='%';
+        en->health=100;
+        en->dir=1;
+        en->ey=20;
+        en->ex=20;
+        en->is_dead=false;
+        en->is_shooting=false;
+        return 0;
+    }
+    else if(n==1)
+    {
+        en->symb='K';
+        en->health=100;
+        en->dir=1;
+        en->ey=25;
+        en->ex=27;
+        en->is_dead=false;
+        en->is_shooting=false;
+        return 0;
+    }
+}

@@ -41,6 +41,7 @@ struct enemy
     int fireball_x;
     bool is_dead;
     bool is_shooting;
+    bool is_hit;
 };
 
 
@@ -51,6 +52,7 @@ long wait_nano(long a);
 
 #include"maptools.h"
 #include"enemy.h"
+#include"player.h"
 
 int main(void)
 {
@@ -95,10 +97,13 @@ int main(void)
     bool errinit=false;
     bool isenemy0_dead=false;
     bool isenemy1_dead=false;
+    bool playerdead=false;
     char errmsg[8];
     int **pMaparr;
     int menu_ret;
     int draw_ret;
+    int enem0_ret;
+    int enem1_ret;
     int ch;
     int welcome_i=0;
     int gety, getx; // terminal max y x
@@ -110,7 +115,7 @@ int main(void)
     int f_ball_x;
     int f_ball_symb;
     int ver0=0;
-    int ver1=2;
+    int ver1=3;
     struct map_data *pMapdata;
     struct player play0={'@',100,0,4,4};
     struct enemy *enem0=malloc(sizeof(struct enemy));
@@ -226,30 +231,17 @@ int main(void)
     pl_y=pMapdata->st_y;
     pl_x=pMapdata->st_x;
     //enemy initialization
-    //if more enemies need the init
-    //involve for() loop
-    enem0->symb='%';
-    enem0->health=100;
-    enem0->dir=1;
-    enem0->ey=20;
-    enem0->ex=20;
-    enem0->is_dead=false;
-    enem0->is_shooting=false;
-    //
-    enem1->symb='K';
-    enem1->health=100;
-    enem1->dir=1;
-    enem1->ey=25;
-    enem1->ex=27;
-    enem1->is_dead=false;
-    enem1->is_shooting=false;
+    enemyinit(map,enem0,0);
+    enemyinit(map,enem1,1);
     //init game window after this point
     gameloop=true;
     wrefresh(stats);
     wrefresh(map);
     touchwin(map);
     box(map,0,0);
+    wattron(map,COLOR_PAIR(4));
     mvwaddch(map,pl_y,pl_x,play0.symb);
+    wattroff(map,COLOR_PAIR(4));
     mvwaddch(map,enem0->ey,enem0->ex,enem0->symb);
     mvwaddch(map,enem1->ey,enem1->ex,enem1->symb);
     srand(time(NULL));
@@ -264,19 +256,6 @@ int main(void)
             STOP!!!!
 
             LOOP IS NOW ENABLED BY nodelay(map,true)
-
-            Controls represented as int
-            UP    - 65
-            DOWN  - 66
-            LEFT  - 68
-            RIGHT - 67
-
-            int value map elements
-
-            4194417 - ramka up/down
-            4194424 - ramka left/right
-            547 - (2)colored box
-            2090 - (4)colored mana
 
             play0.dir: 1 - left
                        2 - up
@@ -295,7 +274,9 @@ int main(void)
                 }
                 mvwprintw(map,pl_y,pl_x," ");
                 pl_y--;
+                wattron(map,COLOR_PAIR(4));
                 mvwaddch(map,pl_y,pl_x,play0.symb);
+                wattroff(map,COLOR_PAIR(4));
                 break;
             case 66: //DOWN
                 play0.dir=3;
@@ -308,7 +289,9 @@ int main(void)
                 }
                 mvwprintw(map,pl_y,pl_x," ");
                 pl_y++;
+                wattron(map,COLOR_PAIR(4));
                 mvwaddch(map,pl_y,pl_x,play0.symb);
+                wattroff(map,COLOR_PAIR(4));
                 break;
             case 68: //LEFT
                 play0.dir=1;
@@ -321,7 +304,9 @@ int main(void)
                 }
                 mvwprintw(map,pl_y,pl_x," ");
                 pl_x--;
+                wattron(map,COLOR_PAIR(4));
                 mvwaddch(map,pl_y,pl_x,play0.symb);
+                wattroff(map,COLOR_PAIR(4));
                 break;
             case 67: //RIGHT
                 play0.dir=4;
@@ -334,7 +319,9 @@ int main(void)
                 }
                 mvwprintw(map,pl_y,pl_x," ");
                 pl_x++;
+                wattron(map,COLOR_PAIR(4));
                 mvwaddch(map,pl_y,pl_x,play0.symb);
+                wattroff(map,COLOR_PAIR(4));
                 break;
             case 32: // space key
                 /*
@@ -365,10 +352,14 @@ int main(void)
                     f_ball_x++;
                 }
                 fireball=true;
+                play0.mana-=1;
                 break;
                 case 57:
                     enem0->is_dead=true;
                     enem1->is_dead=true;
+                break;
+                case 56:
+                    play0.health=0;
                 break;
             case 48:
                 gameloop=false;
@@ -381,8 +372,16 @@ int main(void)
         // end of player interaction
         if(gamepause)
         {
+            if(playerdead)
+            {
+                gameloop=false;
+            }
             menu_ret=main_menu(mmenu,map,pMapdata,pMaparr,gameloop);
-            if(menu_ret==-1) gameloop=false;
+            if(menu_ret==-1)
+            {
+                play0.health=1; // 0 will issue the boom animation - workaround  
+                gameloop=false;
+            }
             else if(menu_ret==2)
             {
                 mvwprintw(map,5,5,"New map loading now");
@@ -392,10 +391,25 @@ int main(void)
                 nodelay(map,false);
                 draw_ret=drawmap(map,pMapdata,pMaparr);
                 nodelay(map,true);
-                // redraw map - start from beggining
+                enemyinit(map,enem0,0);
+                enemyinit(map,enem1,1);
+                pl_y=pMapdata->st_y;
+                pl_x=pMapdata->st_x;
+                play0.health=100;
+                play0.mana=0;
+                wattron(map,COLOR_PAIR(4));
+                mvwaddch(map,pl_y,pl_x,play0.symb);
+                wattroff(map,COLOR_PAIR(4));
+                mvwaddch(map,enem0->ey,enem0->ex,enem0->symb);
+                mvwaddch(map,enem1->ey,enem1->ex,enem1->symb);
                 touchwin(map);
                 wrefresh(map);
                 gamepause=false;
+                if(playerdead)
+                {
+                    gameloop=true;
+                    playerdead=false;
+                }
             } 
             else
             {
@@ -408,9 +422,8 @@ int main(void)
         TODO / known bugs
 
         - int ch show -1 value most of the time - better if will show last pressed keys
+          ch bug is hidden - not showing but still -1
         - fireball floats quicker up and down, slower in sides
-        - fireball won't kill enemy
-        - if player health reaches 0 game pauses instead GAME OVER screen
 
         */
         // start of world interaction after this point
@@ -520,7 +533,8 @@ int main(void)
         // enemy calculations
         if(!isenemy0_dead)
         {
-            if(enemymove(map,enem0)==1)
+            enem0_ret=enemymove(map,enem0);
+            if(enem0_ret==1)
             {
                 isenemy0_dead=true;
             }
@@ -528,15 +542,32 @@ int main(void)
         }
         if(!isenemy1_dead)
         {
-            if(enemymove(map,enem1)==1)
+            enem1_ret=enemymove(map,enem1);
+            if(enem1_ret==1)
             {
                 isenemy1_dead=true;
             }
         }
 
+        if((enem0->is_hit)==true)
+        {
+            play0.health-=20;
+            enem0->is_hit=false;
+        }
+
+        if((enem1->is_hit)==true)
+        {
+            play0.health-=20;
+            enem1->is_hit=false;
+        }
+
         if(play0.health<=0)
         {
+            player_boom_anim(map,pl_y,pl_x);
+            wait_sec(2);
+            playerdead=true;
             gamepause=true;
+
         }
         // start world calculations after this point
         wattron(stats,COLOR_PAIR(16));
@@ -547,8 +578,8 @@ int main(void)
         mvwprintw(stats,1,25,"@    ");
         mvwprintw(stats,1,25,"@ %d",play0.health);
         wattroff(stats,COLOR_PAIR(13));
-        mvwprintw(stats,1,50,"        ");
-        mvwprintw(stats,1,50,"%d",pl_symb);
+        //mvwprintw(stats,1,50,"        ");
+        //mvwprintw(stats,1,50,"%d",pl_symb);
         wrefresh(stats);
         wrefresh(map);
         fps=wait_nano(WAIT_60HZ);
@@ -575,44 +606,6 @@ int main(void)
     }
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // return -1 ends game
 // return 0 continues
@@ -702,9 +695,6 @@ int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop)
                     wrefresh(map);
                     touchwin(mmenu);
                     wrefresh(mmenu);
-                    //mvwprintw(mmenu,6,2,"sel: %p",ret_mapselect); // d_name position is 2 for "real" files
-                    //menupos=rozmowa();
-                    //mvwprintw(mmenu,7,2,"%s",menupos);
                     ret_read=readmap(mmenu,p,d,menupos);
                     if(ret_read==-1)
                     {
