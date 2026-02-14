@@ -3,6 +3,7 @@ Simple ASCII RPG Game
 
 v0.2:
 - init version
+  
 v0.3:
 - basic gameloop and map read and map re-initialization works correctly
 - added colorful animations
