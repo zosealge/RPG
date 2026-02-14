@@ -3,14 +3,17 @@ Simple ASCII RPG Game
 
 v0.2:
 - init version
-- please use at least 100x30 terminal size
-
+v0.3:
+- basic gameloop and map read and map re-initialization works correctly
+- added colorful animations
+  
 # COMPILE
 
 - compile with -lncurses flag to link ncurses library
 gcc or clang.
 
 written in 64_bit linux
+please use at least 100x30 terminal size
 
 # CONTROLS
 
@@ -19,7 +22,8 @@ written in 64_bit linux
 
 - menu can be invoked with 1
 - instant game exit with 0
-- kill all enemies on the screen 9 (will be removed)
+- (debug) instant zero healts 8
+- (debug) kill all enemies on the screen 9
 
 # .MAP FILES
 
