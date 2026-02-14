@@ -21,6 +21,13 @@ written in 64_bit linux
 - instant game exit with 0
 - kill all enemies on the screen 9 (will be removed)
 
+# .MAP FILES
+
+- uses three digits for every variable
+- header contain player start position (enemy start position will be in the future)
+- maps can be only 100x100 (possible more in the future)
+- map data is YYY XXX ASCII_CHAR - 001 001 035
+
 # TODO
 - map editor
 - proper map header (reading player start position and enemies start positions)
