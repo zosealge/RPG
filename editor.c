@@ -30,40 +30,15 @@ struct map_data
     // directory name is hardcoded as "maps"
 };
 
-struct player
-{
-    char symb;
-    int health;
-    int mana;
-    int dir;
-    int fireball_dir;
-};
-
-struct enemy
-{
-    char symb;
-    int health;
-    int dir;
-    int ey;
-    int ex;
-    int e_symb;
-    int fireball_dir;
-    int fireball_y;
-    int fireball_x;
-    bool is_dead;
-    bool is_shooting;
-    bool is_hit;
-};
-
 
 int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop);
+int showhelp(WINDOW *helpwin);
+int yousure(WINDOW *mmenu,WINDOW *q);
 char *main_menu_map_select(WINDOW *loadmenu,WINDOW *map,int **d);
 long wait_sec(long a);
 long wait_nano(long a);
 
 #include"maptools.h"
-#include"enemy.h"
-#include"player.h"
 
 int main(void)
 {
@@ -71,7 +46,7 @@ int main(void)
     cbreak();
     scrollok(stdscr,false);
     noecho();
-    curs_set(0); // change when rendering map will be in place
+    curs_set(0);
     start_color();
             init_pair(1,  COLOR_RED,     COLOR_BLACK);      // ROAD r
             init_pair(2,  COLOR_MAGENTA, COLOR_GREEN);      // BUSH #
@@ -100,40 +75,26 @@ int main(void)
     bool gameloop=false;
     bool mainmenu=false;
     bool gamepause=false;
-    bool playermove=false;
-    bool playeraction=false;
-    bool fireball=false;
     bool debug=true;
     bool welcome_screen=true;
     bool errinit=false;
-    bool isenemy0_dead=false;
-    bool isenemy1_dead=false;
-    bool playerdead=false;
+    bool helpmenu=false;
     char errmsg[8];
     int **pMaparr;
     int menu_ret;
     int draw_ret;
-    int enem0_ret;
-    int enem1_ret;
     int ch;
     int welcome_i=0;
     int gety, getx; // terminal max y x
-    int fps;
-    int pl_y;
-    int pl_x;
-    int pl_symb;
-    int f_ball_y;
-    int f_ball_x;
-    int f_ball_symb;
+    int ed_y;
+    int ed_x;
+    int ed_symb;
     int ver0=0;
-    int ver1=3;
+    int ver1=0;
     int ver2=1;
     struct map_data *pMapdata;
-    struct player play0={'@',100,0,1,1};
-    struct enemy *enem0=malloc(sizeof(struct enemy));
-    struct enemy *enem1=malloc(sizeof(struct enemy));
     struct dirent *map_folder_obj;
-    WINDOW *map, *mmenu, *stats, *welcome;
+    WINDOW *map, *mmenu, *stats, *welcome, *helpwin;
     // after initialization
     getmaxyx(stdscr,gety,getx);
     stats=newwin(3,getx,0,0);
@@ -144,6 +105,7 @@ int main(void)
     {
         ch=0;
         nodelay(welcome,true);
+            mvwaddstr(stats,1,1,"Set teminal window to at least 100x30!");
             wattron(welcome,COLOR_PAIR(4));
             mvwaddstr(welcome,2, 2,"        ####                      x  ");
             mvwaddstr(welcome,3, 2,"        #  ##                    x   ");
@@ -161,19 +123,19 @@ int main(void)
         do
         {
             wattron(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i));
-            mvwaddstr(welcome,9,4,"Ad");
+            mvwaddstr(welcome,9,4,"Ed");
             wattroff(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i));
             wattron(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+1));
-            mvwaddstr(welcome,9,6,"ve");
+            mvwaddstr(welcome,9,6,"it");
             wattroff(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+1));
             wattron(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+2));
-            mvwaddstr(welcome,9,8,"nt");
+            mvwaddstr(welcome,9,8,"or");
             wattroff(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+2));
             wattron(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+3));
-            mvwaddstr(welcome,9,10,"ur");
+            mvwaddstr(welcome,9,10,"!!");
             wattroff(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+3));
             wattron(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+4));
-            mvwaddstr(welcome,9,12,"e!");
+            mvwaddstr(welcome,9,12,"!!");
             wattroff(welcome,COLOR_PAIR(WELCOME_COLORSET+welcome_i+4));
             welcome_i++;
             if(welcome_i>=6) welcome_i=1;
@@ -200,9 +162,10 @@ int main(void)
             wait_nano(WAIT_MENU);
         }
         while(welcome_screen);
+        nodelay(welcome,false);
     }
+    wclear(stats);
     map=newwin(gety-3,getx,3,0);
-    nodelay(welcome,false);
     pMapdata=malloc(sizeof(struct map_data));
     if(pMapdata==NULL)
     {
@@ -229,9 +192,10 @@ int main(void)
     {
         goto goto_clean_exir;
     }
-    // start game loop after this point -----------------------------------------------
+    // start editor loop after this point -----------------------------------------------
     // --------------------------------------------------------------------------------
     // --------------------------------------------------------------------------------
+    curs_set(1);
     mvwprintw(stats,1,1,"%s",pMapdata->file_name);
     wrefresh(stats);
     wrefresh(map);
@@ -239,30 +203,15 @@ int main(void)
     box(stats,0,0);
     box(map,0,0);
     draw_ret=drawmap(map,pMapdata,pMaparr);
-    pl_y=pMapdata->st_y;
-    pl_x=pMapdata->st_x;
-    enem0->symb='%';
-    enem1->symb='K';
-    enem0->ey=pMapdata->en0_y;
-    enem0->ex=pMapdata->en0_x;
-    enem1->ey=pMapdata->en1_y;
-    enem1->ex=pMapdata->en1_x;
-    //enemy initialization
-    enemyinit(map,enem0,0);
-    enemyinit(map,enem1,1);
-    //init game window after this point
     gameloop=true;
     wrefresh(stats);
     wrefresh(map);
     touchwin(map);
     box(map,0,0);
-    wattron(map,COLOR_PAIR(4));
-    mvwaddch(map,pl_y,pl_x,play0.symb);
-    wattroff(map,COLOR_PAIR(4));
-    mvwaddch(map,enem0->ey,enem0->ex,enem0->symb);
-    mvwaddch(map,enem1->ey,enem1->ex,enem1->symb);
-    srand(time(NULL));
-    nodelay(map,true);  // initialize non ending loop
+    ed_y=pMapdata->st_y;
+    ed_x=pMapdata->st_x;
+    wmove(map,ed_y,ed_x);
+    //nodelay(map,true);  // initialize non ending loop
     do
     {
         switch((ch=wgetch(map)))
@@ -281,122 +230,154 @@ int main(void)
 
             */
             case 65: //UP
-                play0.dir=2;
-                pl_symb=mvwinch(map,pl_y-1,pl_x);
-                if(pl_symb==4194417) break;
-                else if(pl_symb==547) break;
-                else if(pl_symb==2090)
-                {
-                    play0.mana++;
-                }
-                mvwprintw(map,pl_y,pl_x," ");
-                pl_y--;
-                wattron(map,COLOR_PAIR(4));
-                mvwaddch(map,pl_y,pl_x,play0.symb);
-                wattroff(map,COLOR_PAIR(4));
+                wmove(map,ed_y--,ed_x);
                 break;
             case 66: //DOWN
-                play0.dir=3;
-                pl_symb=mvwinch(map,pl_y+1,pl_x);
-                if(pl_symb==4194417) break;
-                else if(pl_symb==547) break;
-                else if(pl_symb==2090)
-                {
-                    play0.mana++;
-                }
-                mvwprintw(map,pl_y,pl_x," ");
-                pl_y++;
-                wattron(map,COLOR_PAIR(4));
-                mvwaddch(map,pl_y,pl_x,play0.symb);
-                wattroff(map,COLOR_PAIR(4));
+                wmove(map,ed_y++,ed_x);
+                // down
                 break;
             case 68: //LEFT
-                play0.dir=1;
-                pl_symb=mvwinch(map,pl_y,pl_x-1);
-                if(pl_symb==4194424) break;
-                else if(pl_symb==547) break;
-                else if(pl_symb==2090)
-                {
-                    play0.mana++;
-                }
-                mvwprintw(map,pl_y,pl_x," ");
-                pl_x--;
-                wattron(map,COLOR_PAIR(4));
-                mvwaddch(map,pl_y,pl_x,play0.symb);
-                wattroff(map,COLOR_PAIR(4));
+                wmove(map,ed_y,ed_x--);
                 break;
             case 67: //RIGHT
-                play0.dir=4;
-                pl_symb=mvwinch(map,pl_y,pl_x+1);
-                if(pl_symb==4194424) break;
-                else if(pl_symb==547) break;
-                else if(pl_symb==2090)
-                {
-                    play0.mana++;
-                }
-                mvwprintw(map,pl_y,pl_x," ");
-                pl_x++;
-                wattron(map,COLOR_PAIR(4));
-                mvwaddch(map,pl_y,pl_x,play0.symb);
-                wattroff(map,COLOR_PAIR(4));
+                wmove(map,ed_y,ed_x++);
                 break;
             case 32: // space key
-                /*
-                       1 - left
-                       2 - up
-                       3 - down
-                       4 - right
-                */
-                if(play0.mana==0) break;
-                if(fireball) break;
-                play0.fireball_dir=play0.dir;
-                f_ball_y=pl_y;
-                f_ball_x=pl_x;
-                if(play0.fireball_dir==1)
-                {
-                    f_ball_x--;
-                }
-                else if(play0.fireball_dir==2)
-                {
-                    f_ball_y--;
-                }
-                else if(play0.fireball_dir==3)
-                {
-                    f_ball_y++;
-                }
-                else if(play0.fireball_dir==4)
-                {
-                    f_ball_x++;
-                }
-                fireball=true;
-                play0.mana-=1;
+                mvwaddch(map,ed_y,ed_x,' ');
+                ed_x++;
                 break;
-                case 57:
-                    enem0->is_dead=true;
-                    enem1->is_dead=true;
-                break;
-                case 56:
-                    play0.health=0;
+            case 8: // backspace
+                mvwaddch(map,ed_y,ed_x,' ');
+                ed_x--;
                 break;
             case 48:
                 gameloop=false;
             case 49:
                 gamepause=true;
                 break;
+            case 50:
+                showhelp(helpwin);
+                touchwin(map);
+                break;
+
+            
+            //    122 - # - [Z] wooden box int 547 
+            case 122:
+                mvwaddch(map,ed_y,ed_x,547);
+                ed_x++;
+            break;
+
+            //    120 - s - [X] stone wall int 1395
+            case 120:
+                mvwaddch(map,ed_y,ed_x,1395);
+                ed_x++;
+            break;
+
+            //    99  - * - [C] mana orb int 2090
+            case 99:
+                mvwaddch(map,ed_y,ed_x,2090);
+                ed_x++;
+            break;
+
+            //    118 - T - [V] tree int 2388
+            case 118:
+                mvwaddch(map,ed_y,ed_x,2388);
+                ed_x++;
+            break;
+
+            //    113 - @ - [Q] set player start position int 1088
+            case 113:
+                mvwaddch(map,ed_y,ed_x,1088);
+                curs_set(0);
+                mvwaddstr(stats,1,1,"Player start changed!");
+                box(stats,0,0);
+                wrefresh(stats);
+                wrefresh(map);
+                wait_sec(2);
+                wclear(stats);
+                box(stats,0,0);
+                curs_set(1);
+            break;
+
+            //    119 - % - [W] set 1st enemy position int 37
+            case 119:
+                mvwaddch(map,ed_y,ed_x,37);
+                curs_set(0);
+                mvwaddstr(stats,1,1,"Enemy 1 start changed!");
+                box(stats,0,0);
+                wrefresh(stats);
+                wrefresh(map);
+                wait_sec(2);
+                wclear(stats);
+                box(stats,0,0);
+                curs_set(1);
+            break;
+
+            //    101 - K - [E] set 2nd enemy position int 75
+            case 101:
+                mvwaddch(map,ed_y,ed_x,75);
+                curs_set(0);
+                mvwaddstr(stats,1,1,"Enemy 2 start changed!");
+                box(stats,0,0);
+                wrefresh(stats);
+                wrefresh(map);
+                wait_sec(2);
+                wclear(stats);
+                box(stats,0,0);
+                curs_set(1);
+            break;
+
+            //    104 - H - [R] set 3rd enemy position int 72
+            case 104:
+                mvwaddch(map,ed_y,ed_x,72);
+                curs_set(0);
+                mvwaddstr(stats,1,1,"Enemy 3 start changed!");
+                box(stats,0,0);
+                wrefresh(stats);
+                wrefresh(map);
+                wait_sec(2);
+                wclear(stats);
+                box(stats,0,0);
+                curs_set(1);
+            break;
+
+            //    106 - O - [T] set 4th enemy position int 79
+            case 106:
+                mvwaddch(map,ed_y,ed_x,79);
+                curs_set(0);
+                mvwaddstr(stats,1,1,"Enemy 4 start changed!");
+                box(stats,0,0);
+                wrefresh(stats);
+                wrefresh(map);
+                wait_sec(2);
+                wclear(stats);
+                box(stats,0,0);
+                curs_set(1);
+            break;
+
+            /*
+        r 370
+        # 547
+        g 871
+        @ 1088
+        s 1395
+        w 1655
+        d 1892
+        * 2090
+        T 2388
+        */
+
+
             default:
                 break;
         }
         // end of player interaction
         if(gamepause)
         {
-            if(playerdead)
-            {
-                gameloop=false;
-            }
+            curs_set(0);
             menu_ret=main_menu(mmenu,map,pMapdata,pMaparr,gameloop);
             if(menu_ret==-1)
             {
-                play0.health=1; // 0 will issue the boom animation - workaround  
                 gameloop=false;
             }
             else if(menu_ret==2)
@@ -405,207 +386,39 @@ int main(void)
                 wclear(stats);
                 box(stats,0,0);
                 mvwprintw(stats,1,1,"%s",pMapdata->file_name);
-                nodelay(map,false);
                 draw_ret=drawmap(map,pMapdata,pMaparr);
-                nodelay(map,true);
-                enemyinit(map,enem0,0);
-                enemyinit(map,enem1,1);
-                pl_y=pMapdata->st_y;
-                pl_x=pMapdata->st_x;
-                play0.health=100;
-                play0.mana=0;
-                wattron(map,COLOR_PAIR(4));
-                mvwaddch(map,pl_y,pl_x,play0.symb);
-                wattroff(map,COLOR_PAIR(4));
-                mvwaddch(map,enem0->ey,enem0->ex,enem0->symb);
-                mvwaddch(map,enem1->ey,enem1->ex,enem1->symb);
                 touchwin(map);
                 wrefresh(map);
                 gamepause=false;
-                if(playerdead)
-                {
-                    gameloop=true;
-                    playerdead=false;
-                }
-            } 
+                curs_set(1);
+            }
             else
             {
                 touchwin(map);
                 wrefresh(map);
                 gamepause=false;
+                curs_set(1);
             }
         }
-        /*
-        TODO / known bugs
-
-        - int ch show -1 value most of the time - better if will show last pressed keys
-          ch bug is hidden - not showing but still -1
-        - fireball floats quicker up and down, slower in sides
-
-        */
-        // start of world interaction after this point
-        if(fireball)
+        // check what is under cursor
+        ed_symb=mvwinch(map,ed_y,ed_x);
+        if(ed_symb==-1)
         {
-            //1 - left
-            //2 - up
-            //3 - down
-            //4 - right
-            if(play0.fireball_dir==1)
-            {
-                mvwaddch(map,f_ball_y,f_ball_x,' ');
-                f_ball_x--;
-                mvwaddch(map,f_ball_y,f_ball_x,'-');
-                f_ball_symb=mvwinch(map,f_ball_y,f_ball_x-1);
-                if(f_ball_symb==4194424)
-                {
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==37)
-                {
-                    enem0->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==75)
-                {
-                    enem1->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-            }
-            else if(play0.fireball_dir==2)
-            {
-                mvwaddch(map,f_ball_y,f_ball_x,' ');
-                f_ball_y--;
-                mvwaddch(map,f_ball_y,f_ball_x,'|');
-                f_ball_symb=mvwinch(map,f_ball_y-1,f_ball_x);
-                if(f_ball_symb==4194417)
-                {
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==37)
-                {
-                    enem0->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==75)
-                {
-                    enem1->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-            }
-            else if(play0.fireball_dir==3)
-            {
-                mvwaddch(map,f_ball_y,f_ball_x,' ');
-                f_ball_y++;
-                mvwaddch(map,f_ball_y,f_ball_x,'|');
-                f_ball_symb=mvwinch(map,f_ball_y+1,f_ball_x);
-                if(f_ball_symb==4194417)
-                {
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==37)
-                {
-                    enem0->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==75)
-                {
-                    enem1->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-            }
-            else if(play0.fireball_dir==4)
-            {
-                mvwaddch(map,f_ball_y,f_ball_x,' ');
-                f_ball_x++;
-                mvwaddch(map,f_ball_y,f_ball_x,'-');
-                f_ball_symb=mvwinch(map,f_ball_y,f_ball_x+1);
-                if(f_ball_symb==4194424)
-                {
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==37)
-                {
-                    enem0->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-                else if(f_ball_symb==75)
-                {
-                    enem1->is_dead=true;
-                    fireball=false;
-                    mvwaddch(map,f_ball_y,f_ball_x,' ');
-                }
-            }
-        }
-        // enemy calculations
-        if(!isenemy0_dead)
-        {
-            enem0_ret=enemymove(map,enem0);
-            if(enem0_ret==1)
-            {
-                isenemy0_dead=true;
-            }
-            
-        }
-        if(!isenemy1_dead)
-        {
-            enem1_ret=enemymove(map,enem1);
-            if(enem1_ret==1)
-            {
-                isenemy1_dead=true;
-            }
-        }
-
-        if((enem0->is_hit)==true)
-        {
-            play0.health-=20;
-            enem0->is_hit=false;
-        }
-
-        if((enem1->is_hit)==true)
-        {
-            play0.health-=20;
-            enem1->is_hit=false;
-        }
-
-        if(play0.health<=0)
-        {
-            player_boom_anim(map,pl_y,pl_x);
-            wait_sec(2);
-            playerdead=true;
-            gamepause=true;
-
+            ed_y=pMapdata->st_y;
+            ed_x=pMapdata->st_x;
         }
         // start world calculations after this point
-        wattron(stats,COLOR_PAIR(16));
-        mvwprintw(stats,1,20,"*   ");
-        mvwprintw(stats,1,20,"* %d",play0.mana);
-        wattroff(stats,COLOR_PAIR(16));
-        wattron(stats,COLOR_PAIR(13));
-        mvwprintw(stats,1,25,"@    ");
-        mvwprintw(stats,1,25,"@ %d",play0.health);
-        wattroff(stats,COLOR_PAIR(13));
-        //mvwprintw(stats,1,50,"        ");
-        //mvwprintw(stats,1,50,"%d",pl_symb);
+        mvwprintw(stats,1,50,"        ");
+        mvwprintw(stats,1,50,"%d",ed_symb);
+        mvwprintw(stats,1,35,"         ");
+        mvwprintw(stats,1,35,"y%3d x%3d",ed_y,ed_x);
         wrefresh(stats);
         wrefresh(map);
-        fps=wait_nano(WAIT_60HZ);
+        //wait_nano(WAIT_60HZ);
     }
     while(gameloop);
     //end game after this point - error or clean exit
     goto_clean_exir: ;
-    free(enem0);
-    free(enem1);
     free(pMapdata);
     for(int i=0;i<MAP_MAX_Y;i++)
     {
@@ -633,14 +446,15 @@ int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop)
     char *menupos;
     int ret_exit;
     int ret_read;
+    int question_ret;
+    int save_ret;
     int ch;
     int cursory;
     int cursorx=2;
     bool menudajesz=true;
-    WINDOW *loadmenu;
+    WINDOW *loadmenu, *q_win;
     mmenu=newwin(10,18,5,5);
     box(mmenu,0,0);
-    nodelay(mmenu,false);
     mvwaddstr(mmenu,0,2,"---=Menu=---");
     if(gameloop)
     {
@@ -648,8 +462,9 @@ int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop)
     cursory=3;
     }
     else cursory=4;
-    mvwaddstr(mmenu,4,3,"New Game");
-    mvwaddstr(mmenu,5,3,"Exit");
+    mvwaddstr(mmenu,4,3,"Load map");
+    mvwaddstr(mmenu,5,3,"Save map");
+    mvwaddstr(mmenu,6,3,"Exit");
     mvwaddch(mmenu,cursory,cursorx,'>');
     wrefresh(mmenu);
     do
@@ -678,14 +493,14 @@ int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop)
             case 66:
                 mvwaddch(mmenu,cursory,cursorx,' ');
                 cursory++;
-                if(cursory>=6)
+                if(cursory>=7)
                 {
                     cursory--;
                 }
                 mvwaddch(mmenu,cursory,cursorx,'>');
                 break;
             case 10:
-                if(cursory==5)
+                if(cursory==6)
                 {
                     menudajesz=false;
                     ret_exit=-1; // -1 will clean exit RPG
@@ -724,6 +539,28 @@ int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop)
                         ret_exit=1;
                     }
                 }
+                else if(cursory==5)
+                {
+                    if(gameloop)
+                    {
+                        question_ret=yousure(mmenu,q_win);
+                        if(question_ret==0)
+                        {
+                            touchwin(mmenu);
+                        }
+                        else if(question_ret==1)
+                        {
+                            //readmap(mmenu,p,d,menupos);
+                            save_ret=savemap(map,mmenu,p,d,menupos);
+                            touchwin(mmenu);    
+                            mvwaddstr(mmenu,5,3,"  Saved!");
+                        }
+                    }
+                    else
+                    {
+                        mvwaddstr(mmenu,5,3,"Not Yet!");
+                    }
+                }
                 break;
             default:
                 break;
@@ -732,9 +569,102 @@ int main_menu(WINDOW *mmenu,WINDOW *map,void *p,int **d,bool gameloop)
         wrefresh(mmenu);
     }
     while(menudajesz);
-    nodelay(mmenu,true);
     delwin(mmenu);
     return ret_exit;
+}
+int showhelp(WINDOW *h)
+{
+        /*
+        r 370
+        # 547
+        g 871
+        @ 1088
+        s 1395
+        w 1655
+        d 1892
+        * 2090
+        T 2388
+        */
+    bool showhelp=true;
+    int ch;
+    curs_set(0);
+    h=newwin(20,35,4,4);
+    box(h,0,0);
+    mvwaddstr(h,0,2,"---=Help=---");
+    wrefresh(h);
+     mvwaddch(h,1,1,547);
+    mvwaddstr(h,1,3,"- [Z] wooden box");
+
+     mvwaddch(h,2,1,1395);
+    mvwaddstr(h,2,3,"- [X] stone wall");
+
+     mvwaddch(h,3,1,2090);
+    mvwaddstr(h,3,3,"- [C] mana orb");
+
+     mvwaddch(h,4,1,2388);
+    mvwaddstr(h,4,3,"- [V] tree");
+
+     mvwaddch(h,5,1,1088);
+    mvwaddstr(h,5,3,"- [Q] set player start position");
+
+     mvwaddch(h,6,1,37);
+    mvwaddstr(h,6,3,"- [W] set 1st enemy position");
+
+     mvwaddch(h,7,1,75);
+    mvwaddstr(h,7,3,"- [E] set 2nd enemy position");
+
+     mvwaddch(h,8,1,72);
+    mvwaddstr(h,8,3,"- [R] set 3rd enemy position");
+
+     mvwaddch(h,9,1,79);
+    mvwaddstr(h,9,3,"- [T] set 4th enemy position");
+
+    mvwaddstr(h,11,1,"Press key in bracket");
+    mvwaddstr(h,12,1,"to place element on map.");
+    mvwaddstr(h,18,1,"Press any key to continue");
+    do
+    {
+        switch(ch=wgetch(h))
+        {
+            default:
+            showhelp=false;
+            curs_set(1);
+            break;
+        }
+    }
+    while(showhelp);
+    delwin(h);
+    return 0;
+}
+
+int yousure(WINDOW *mmenu,WINDOW *q)
+{
+    bool showthis=true;
+    int ch;
+    q=newwin(4,35,4,4);
+    box(q,0,0);
+    mvwaddstr(q,1,1,"Press [Y/y] to save current map");
+    mvwaddstr(q,2,1,"any key to cancel");
+    wrefresh(q);
+    do
+    {
+        switch(ch=wgetch(mmenu))
+        {
+            case 121:
+            case 89:
+                showthis=false;
+                delwin(q);
+                return 1;
+            break;
+            default:
+                showthis=false;
+                delwin(q);
+                return 0;
+            break;
+        }
+    }
+    while(showthis);
+    return 0;
 }
 char *main_menu_map_select(WINDOW *loadmenu,WINDOW *map,int **d)
 {
@@ -755,7 +685,6 @@ char *main_menu_map_select(WINDOW *loadmenu,WINDOW *map,int **d)
     DIR *mapdir;
     loadmenu=newwin(10,30,6,6);
     box(loadmenu,0,0);
-    nodelay(loadmenu,false);
     mapdir=opendir(map_folder);
     if(mapdir==NULL)
     {   
