@@ -1,12 +1,7 @@
 # RPG
 Simple ASCII RPG Game
 
-v0.2:
-- init version
-  
-v0.3:
-- basic gameloop and map read and map re-initialization works correctly
-- added colorful animations
+Set Your Terminal emulator to at least 100x30 before running RPG or RPG Editor
   
 # COMPILE
 
@@ -33,6 +28,18 @@ please use at least 100x30 terminal size
 - maps can be only 100x100 (possible more in the future)
 - map data is YYY XXX ASCII_CHAR - 001 001 035
 
-# TODO
-- map editor
-- proper map header (reading player start position and enemies start positions)
+# HISTORY
+
+v0.2:
+- init version
+  
+v0.3:
+- basic gameloop and map read and map re-initialization works correctly
+- added colorful animations
+
+v0.3.1:
+- added map editor (v0.0.1) with basic functionality
+- new map read/write format has read/draw bug that holds gameloop (cpu time to measure)
+- player spawning x,y from map, enemy spawns x,y from map (only enemy 1 and 2 at the moment)
+- 
+
