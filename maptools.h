@@ -1,11 +1,11 @@
-int readmap(WINDOW *mmenu,void *p,int **d,char *mapname);
-int drawmap(WINDOW *map,void *p,int **d);
+int readmap(struct map_data *data0,int **d,const char *mapname);
+int drawmap(WINDOW *map,struct map_data *data0,int **d);
 int savemap(WINDOW *map,WINDOW *mmenu,void *p,int **d,char *mapname);
+int redraw(WINDOW *map,struct map_data *data0,int **d);
 
-int readmap(WINDOW *mmenu,void *p,int **d,char *mapname)
+int readmap(struct map_data *data0,int **d,const char *mapname)
 {
     const char *map_folder="maps";
-    struct map_data *data0=p;
     char path[24];
     char buffer[64];
     int ch;
@@ -22,8 +22,9 @@ int readmap(WINDOW *mmenu,void *p,int **d,char *mapname)
     strcat(path,"/");
     strcat(path,mapname);
     strcpy(data0->file_name,mapname);
+    strcat(path,".map");
     mapfile=fopen(path,"r");
-    if(mapfile==NULL) return -1;
+    if(mapfile==NULL) return 1;
     readmap=true;
     fgets(buffer,64,mapfile);
     sscanf(buffer,"%d %d",&sy,&sx);
@@ -53,20 +54,39 @@ int readmap(WINDOW *mmenu,void *p,int **d,char *mapname)
     return 0;
 }
 
-int drawmap(WINDOW *map,void *p,int **d)
+int drawmap(WINDOW *map,struct map_data *data0,int **d)
 {
-    struct map_data *data0=p;
-    int my;
-    int mx;
-    int y;
-    int x;
+    const int my=26;
+    const int mx=99;
+    int y=2;
+    int x=2;
     int ch;
-    my=100;
-    mx=26;
+    int ch_symb;
     bool drawmap=false;
-    wclear(map);
-    box(map,0,0);
     wrefresh(map);
+    //wmove(map,y,x);
+    do
+    {
+        if(x>=mx)
+        {
+            y++;
+            x=2;
+            wmove(map,y,x);
+            wait_nano(19999999);
+            wrefresh(map);
+        }
+        wmove(map,y,x);
+             if((d[y][x])==35) mvwaddch(map,y,x,547);
+        else if((d[y][x])==115) mvwaddch(map,y,x,1395);
+        else if((d[y][x])==42) mvwaddch(map,y,x,2090);
+        else if((d[y][x])==84) mvwaddch(map,y,x,2388);
+        else mvwaddch(map,y,x,' ');
+        //wait_nano(1999999);
+        x++;
+        wrefresh(map);
+    }
+    while(y<my);
+
                             /*
                             r 370
                             # 547
@@ -78,9 +98,10 @@ int drawmap(WINDOW *map,void *p,int **d)
                             * 2090
                             T 2388
                             */
-    for(x=0;x<mx;x++)
+    /*
+    for(int i=y,int o=x;i<my;i++)
     {
-        for(y=0;y<my;y++)
+        for(int i=y,int o=x;i<mx;i++)
         {
             ch=d[y][x];
             if(ch==35)
@@ -117,24 +138,14 @@ int drawmap(WINDOW *map,void *p,int **d)
                 data0->en1_x=x;
                 mvwaddch(map,y,x,75);
             }
-            /*
-            if((d[y][x])==35)
-            {
-                wattron(map,COLOR_PAIR(2));
-                mvwaddch(map,y,x,d[y][x]);
-                wattroff(map,COLOR_PAIR(2));
-            }
-            else if((d[y][x])==42)
-            {
-                wattron(map,COLOR_PAIR(8));
-                mvwaddch(map,y,x,d[y][x]);
-                wattroff(map,COLOR_PAIR(8));
-            }
-            */
+            wmove(map,y,x);
+            wrefresh(map);
+            wait_nano(59999999);
         }
+        wait_nano(59999999);
     }
+    */
     wrefresh(map);
-    while(drawmap);
     return 0;
 }
 
@@ -196,11 +207,61 @@ int savemap(WINDOW *map,WINDOW *mmenu,void *p,int **d,char *mapname)
             fprintf(mapfile,"%3d %3d %3d\n",y_i,x_i,ch);
             wmove(map,y_i,x_i);
             wrefresh(map);
+            wait_nano(199999);
         }
     }
     readmap=false;
     savemap=false;
     fclose(mapfile);
     touchwin(mmenu);
+    return 0;
+}
+
+int redraw(WINDOW *map,struct map_data *data0,int **d)
+{
+    const int my=26;
+    const int mx=100;
+    int y=1;
+    int x=1;
+    //int ch;
+    bool drawmap;
+    curs_set(1);
+    //touchwin(map);
+    wclear(map);
+    wrefresh(map);
+    //first draw trees boundary
+    for(y=1,x=1;y<my;y++)
+    {
+        mvwaddch(map,y,x,2388);
+        wrefresh(map);
+        wmove(map,y,x);
+        wait_nano(1999999);
+    }
+
+    for(y=1,x=99;y<my;y++)
+    {
+        mvwaddch(map,y,x,2388);
+        wrefresh(map);
+        wmove(map,y,x);
+        wait_nano(1999999);
+    }
+
+    for(y=1,x=1;x<mx;x++)
+    {
+        mvwaddch(map,y,x,2388);
+        wrefresh(map);
+        wmove(map,y,x);
+        wait_nano(1999999);
+    }
+
+    for(y=26,x=1;x<mx;x++)
+    {
+        mvwaddch(map,y,x,2388);
+        wrefresh(map);
+        wmove(map,y,x);
+        wait_nano(1999999);
+    }
+    wrefresh(map);
+    curs_set(0);
     return 0;
 }
