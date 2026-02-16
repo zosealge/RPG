@@ -11,11 +11,12 @@ probably will work on macos
 please use at least 100x30 terminal size
 
 # TO DO
-- main menu in separate header file
 - map editor
-- welcome screen with nice text animation
 - loading enemies start position from map header
-- terminal size detect and prevent from start when to small
+- terminal size detect and prevent from start when too small
+- move malloc from load submenu to program initialization section and pass pointer to load submenu
 
 # KNOWN BUGS
-- dead enemies will not revive on map reload
+- after multiple map reloads, load submenu corrupts allowing to load empty string in place of file_name
+- not every collision test are in place
+- 30-40% CPU usage when in gameloop
