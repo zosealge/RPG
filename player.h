@@ -1,4 +1,4 @@
-int player_boom_anim(WINDOW *screen,int y, int x)
+void player_boom_anim(WINDOW *screen,int y, int x)
 {
     const long WAIT_BOOM=96666666;
 

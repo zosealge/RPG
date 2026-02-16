@@ -24,8 +24,8 @@ int readmap(struct map_data *data0,int **d,const char *mapname)
     strcpy(path,map_folder);
     strcat(path,"/");
     strcat(path,mapname);
-    strncpy(data0->file_name,mapname,8);
-    strcat(path,".map");
+    strncpy(data0->file_name,mapname,12);
+    //strcat(path,".map");
     mapfile=fopen(path,"r");
     if(mapfile==NULL) return 1;
     readmap=true;
@@ -173,7 +173,7 @@ int redraw(WINDOW *map)
         mvwaddch(map,y,x,2388);
         wrefresh(map);
         wmove(map,y,x);
-        wait_nano(1999999);
+        wait_nano(5999999);
     }
 
     for(y=1,x=99;y<MY;y++)
@@ -181,7 +181,7 @@ int redraw(WINDOW *map)
         mvwaddch(map,y,x,2388);
         wrefresh(map);
         wmove(map,y,x);
-        wait_nano(1999999);
+        wait_nano(5999999);
     }
 
     for(y=1,x=1;x<MX;x++)
@@ -209,7 +209,7 @@ int undraw(WINDOW *map,WINDOW *stats)
     const int sx=31;
     int y=0;
     int x=0;
-    for(y;y<MY;y++)
+    for(y;y<MY+1;y++)
     {
         for(x;x<MX;x++)
         {

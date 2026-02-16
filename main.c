@@ -94,8 +94,7 @@ int main(void)
             init_pair(20, COLOR_BLUE,    COLOR_BLACK);
     //     
     const char *map_folder="maps";
-    const char *mapname="test";
-    const char *mapname2="mordor";                
+    const char *mapname="test.map";              
     const long WAIT_60HZ=16666666;
     bool gameloop=false;
     bool menupause=false;
@@ -112,11 +111,11 @@ int main(void)
     char path[24];
     int **pMaparr;
     int menu_ret;
+    int newmenu_ret;
     int draw_ret;
     int enem0_ret;
     int enem1_ret;
     int ch;
-    int whatmap=1;
     int gety, getx; // terminal max y x
     int fps;
     int pl_y;
@@ -128,7 +127,17 @@ int main(void)
     struct map_data *pMapdata;
     struct player play0={'@',100,0,1,1};
     struct enemy *enem0=malloc(sizeof(struct enemy));
+    if(enem0==NULL)
+    {
+        strcpy(errmsg,"RC0001");
+        goto goto_error;
+    }
     struct enemy *enem1=malloc(sizeof(struct enemy));
+    if(enem1==NULL)
+    {
+        strcpy(errmsg,"RC0001");
+        goto goto_error;
+    }
     struct dirent *map_folder_obj;
     WINDOW *map, *stats;
     // after initialization
@@ -139,7 +148,7 @@ int main(void)
     pMapdata=malloc(sizeof(struct map_data));
     if(pMapdata==NULL)
     {
-        strcpy(errmsg,"RC0000");
+        strcpy(errmsg,"RC0001");
         goto goto_error;
     }
     pMaparr=malloc(sizeof(int *)*MAP_MAX_Y*MAP_MAX_X);
@@ -153,20 +162,19 @@ int main(void)
         pMaparr[i]=malloc(sizeof(int)*MAP_MAX_Y*MAP_MAX_X);
         if(pMaparr[i]==NULL)
         {
-            strcpy(errmsg,"RC0002");
+            strcpy(errmsg,"RC0001");
             goto goto_error;
         }
+    }
+    newmenu_ret=newmenu(pMapdata);
+    if(newmenu_ret==1)
+    {
+        goto goto_clean_exit;
     }
     // start game loop after this point -----------------------------------------------
     // --------------------------------------------------------------------------------
     // --------------------------------------------------------------------------------
-    // load test map
-    strcpy(path,map_folder);
-    strcat(path,"/");
-    strcat(path,mapname);
-    strcpy(pMapdata->file_name,mapname);
-    strcat(path,".map");
-    draw_ret=readmap(pMapdata,pMaparr,mapname); //test.map will be hardcoded
+    draw_ret=readmap(pMapdata,pMaparr,(pMapdata->file_name));
     if(draw_ret==1)
     {
         goto goto_error;
@@ -176,9 +184,9 @@ int main(void)
 
     //FILL MAP WITH TREES BOUNDARIES
     redraw(map);
-    mvwaddstr(map,2,2,"Loading:");
+    mvwaddstr(map,2,3,"Loading:");
     wattron(map,COLOR_PAIR(11));
-    mvwaddstr(map,2,11,pMapdata->file_name);
+    mvwaddstr(map,2,12,pMapdata->file_name);
     wattroff(map,COLOR_PAIR(11));
     mvwaddstr(map,4,4,"Please wait");
     for(int i=15;i<19;i++)
@@ -332,14 +340,7 @@ int main(void)
                 case 55:
                     play0.mana=99;
                 break;
-                case 49:
-                    whatmap=1;
-                    mapreload=true;
-                break;
-                case 50:
-                    whatmap=2;
-                    mapreload=true;
-                break;
+
                 case 48:
                     gameloop=false;
                 break;
@@ -510,8 +511,18 @@ int main(void)
         {
             player_boom_anim(map,pl_y,pl_x);
             wait_sec(2);
-            playerdead=true;
             gameloop=false;
+            menu_ret=mainmenu(gameloop,pMapdata);
+            if(menu_ret==2)
+            {
+                mapreload=false;
+                menupause=false;
+            }
+            else
+            {
+                mapreload=true;
+                gameloop=true;
+            }
 
         }
         // start world calculations after this point
@@ -530,7 +541,15 @@ int main(void)
         if(menupause)
         {
             nodelay(map,false);
-            mainmenu(gameloop,pMapdata);
+            menu_ret=mainmenu(gameloop,pMapdata);
+            if(menu_ret==2)
+            {
+                gameloop=false;
+            }
+            else if(menu_ret==1)
+            {
+                mapreload=true;
+            }
             touchwin(map);
             menupause=false;
             nodelay(map,true);
@@ -541,14 +560,7 @@ int main(void)
             //mvwaddch(stats,1,1,' ');
             //wrefresh(stats);
             nodelay(map,false); // stop the loop before next tick
-            if(whatmap==1)
-            {
-                draw_ret=readmap(pMapdata,pMaparr,mapname);
-            }
-            else if(whatmap==2)
-            {
-                draw_ret=readmap(pMapdata,pMaparr,mapname2);
-            }
+            draw_ret=readmap(pMapdata,pMaparr,(pMapdata->file_name));
             if(draw_ret==1)
             {
                 goto goto_error;
@@ -559,9 +571,9 @@ int main(void)
 
             //FILL MAP WITH TREES BOUNDARIES
             redraw(map);
-            mvwaddstr(map,2,2,"Loading:");
+            mvwaddstr(map,2,3,"Loading:");
             wattron(map,COLOR_PAIR(11));
-            mvwaddstr(map,2,11,pMapdata->file_name);
+            mvwaddstr(map,2,12,pMapdata->file_name);
             wattroff(map,COLOR_PAIR(11));
             mvwaddstr(map,4,4,"Please wait");
             for(int i=15;i<19;i++)
@@ -573,17 +585,15 @@ int main(void)
             }
             //
             drawmap(map,pMapdata,pMaparr);
+            play0.health=100;
+            play0.mana=0;
             pl_y=pMapdata->st_y;
             pl_x=pMapdata->st_x;
-            //enem0->symb='%';
-            //enem1->symb='K';
-            //enem0->ey=20;
-            //enem0->ex=25;
-            //enem1->ey=10;
-            //enem1->ex=15;
             //enemy initialization
             enemyinit(map,enem0,0);
             enemyinit(map,enem1,1);
+            isenemy0_dead=false;
+            isenemy1_dead=false;
             //init game window after this point
             gameloop=true;
             box(stats,0,0);
@@ -595,7 +605,6 @@ int main(void)
             wattroff(map,COLOR_PAIR(4));
             mvwaddch(map,enem0->ey,enem0->ex,enem0->symb);
             mvwaddch(map,enem1->ey,enem1->ex,enem1->symb);
-            srand(time(NULL));
             nodelay(map,true);  // initialize non ending loop
             mapreload=false;
         }
