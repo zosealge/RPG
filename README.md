@@ -2,11 +2,14 @@
 Simple ASCII RPG Game with enemies, fireballs and... adventure
   
 # COMPILE
-compile with -lncurses flag to link ncurses library
-gcc or clang
+make has -Wall -Wextra -Werror flags set
+"make clean" for cleanup after compilation
 
 written in linux
-probably will work on macos
+
+for macOS change the strncpy for strcpy_s
+
+windows untested... and fk windows anyway
 
 please use at least 100x30 terminal size
 
@@ -17,6 +20,5 @@ please use at least 100x30 terminal size
 - move malloc from load submenu to program initialization section and pass pointer to load submenu
 
 # KNOWN BUGS
-- after multiple map reloads, load submenu corrupts allowing to load empty string in place of file_name
 - not every collision test are in place
-- 30-40% CPU usage when in gameloop
+- fireballs can fly infinite when out ouf bounds of window (or cause undefined behavior)
