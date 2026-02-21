@@ -2,8 +2,8 @@
 Simple ASCII RPG Game with enemies, fireballs and... adventure
   
 # COMPILE
-make has -Wall -Wextra -Werror flags set
-"make clean" for cleanup after compilation
+make rpg - to compile RPG
+make editor - to compile map editor
 
 written in linux
 
@@ -14,11 +14,11 @@ windows untested... and fk windows anyway
 please use at least 100x30 terminal size
 
 # TO DO
-- map editor
-- loading enemies start position from map header
 - terminal size detect and prevent from start when too small
 - move malloc from load submenu to program initialization section and pass pointer to load submenu
 
 # KNOWN BUGS
-- not every collision test are in place
+- entering into map selection submenu from entry screen, not selecting map, and exit cause seg fault
+- enemies near walls dissapear for a moment
+- shooting walls at zero distance erases them
 - fireballs can fly infinite when out ouf bounds of window (or cause undefined behavior)
