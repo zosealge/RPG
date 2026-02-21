@@ -2,8 +2,8 @@
 Simple ASCII RPG Game with enemies, fireballs and... adventure
   
 # COMPILE
-make rpg - to compile RPG
-make editor - to compile map editor
+- make rpg - to compile RPG
+- make editor - to compile map editor
 
 written in linux
 
