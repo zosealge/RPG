@@ -1,13 +1,7 @@
 #define MY 26
 #define MX 100
 
-int readmap(struct map_data *data0,int **d,const char *mapname);
-int drawmap(WINDOW *map,int **d);
-int savemap(WINDOW *map,WINDOW *mmenu,void *p);
-void redraw(WINDOW *map);
-void undraw(WINDOW *map,WINDOW *stats);
-
-int readmap(struct map_data *data0,int **d,const char *mapname)
+int readmap(struct map_data *data0,int **d)
 {
     const char *map_folder="maps";
     char path[24];
@@ -20,10 +14,9 @@ int readmap(struct map_data *data0,int **d,const char *mapname)
     int y;
     int x;
     FILE *mapfile;
-    strncpy(path,map_folder,sizeof(&map_folder)+1);
-    strcat(path,"/");
-    strcat(path,mapname);
-    strncpy(data0->file_name,mapname,sizeof(&map_folder));
+    strncpy(path,map_folder,5);
+    strncat(path,"/",2);
+    strncat(path,data0->file_name,12);
     mapfile=fopen(path,"r");
     if(mapfile==NULL) return 1;
     fgets(buffer,64,mapfile);
@@ -55,7 +48,7 @@ int readmap(struct map_data *data0,int **d,const char *mapname)
     return 0;
 }
 
-int drawmap(WINDOW *map,int **d)
+int drawmap(WINDOW *map,int **d,struct map_data *data0)
 {
     int y;
     int x;
@@ -68,6 +61,30 @@ int drawmap(WINDOW *map,int **d)
         else if((d[y][x])==115) mvwaddch(map,y,x,1395);
         else if((d[y][x])==42)  mvwaddch(map,y,x,2090);
         else if((d[y][x])==84)  mvwaddch(map,y,x,2388);
+        else if((d[y][x])==37)
+        {
+            data0->en0_y=y;
+            data0->en0_x=x;
+            mvwaddch(map,y,x,37);
+        }
+        else if((d[y][x])==36)
+        {
+            data0->en1_y=y;
+            data0->en1_x=x;
+            mvwaddch(map,y,x,36);
+        }
+        else if((d[y][x])==38)
+        {
+            data0->en2_y=y;
+            data0->en2_x=x;
+            mvwaddch(map,y,x,38);
+        }
+        else if((d[y][x])==33)
+        {
+            data0->en3_y=y;
+            data0->en3_x=x;
+            mvwaddch(map,y,x,33);
+        }
         else mvwaddch(map,y,x,' ');
         }
         x=2;
@@ -90,10 +107,9 @@ int drawmap(WINDOW *map,int **d)
     return 0;
 }
 
-int savemap(WINDOW *map,WINDOW *mmenu,void *p)
+int savemap(WINDOW *map,struct map_data *data0)
 {
     const char *map_folder="maps";
-    struct map_data *data0=p;
     char path[24];
     int ch;
     int y_i;
@@ -107,8 +123,8 @@ int savemap(WINDOW *map,WINDOW *mmenu,void *p)
     {
         return -1;
     }
-    y_i=1;
-    x_i=1;
+    y_i=2;
+    x_i=2;
     //sprintf(buffer,"%3d %3d",data0->st_y,data0->st_x);
     //header information
     //001 002
@@ -118,15 +134,13 @@ int savemap(WINDOW *map,WINDOW *mmenu,void *p)
     //map data
     //001 002 003
     //  y   x  ch
-
     fprintf(mapfile,"%3d %3d\n",data0->st_y,data0->st_x);
-    //end of header write
-    touchwin(map);
     wmove(map,y_i,x_i);
+    //end of header write
     //start read/write loop
-    for(y_i=1;y_i<MY;y_i++)
+    for(y_i=2;y_i<MY;y_i++)
     {
-        for(x_i=1;x_i<MX;x_i++)
+        for(x_i=2;x_i<MX;x_i++)
         {
             ch=mvwinch(map,y_i,x_i);
             if(ch==547) ch=35;
@@ -134,16 +148,15 @@ int savemap(WINDOW *map,WINDOW *mmenu,void *p)
             else if(ch==1395) ch=115;
             else if(ch==2090) ch=42;
             else if(ch==2388) ch=84;
-            else if(ch<33) continue;
+            else if(ch<32) continue;
             //else if(ch>126) continue;
             fprintf(mapfile,"%3d %3d %3d\n",y_i,x_i,ch);
             wmove(map,y_i,x_i);
             wrefresh(map);
-            wait_nano(199999);
         }
+        x_i=2;
     }
     fclose(mapfile);
-    touchwin(mmenu);
     return 0;
 }
 
@@ -207,4 +220,16 @@ void undraw(WINDOW *map,WINDOW *stats)
         wrefresh(stats);
         wait_nano(9999999);
     }
+}
+
+void undrawedit(WINDOW *name)
+{
+    for(int i=0;i<14;i++)
+        {
+            mvwaddch(name,0,i,' ');
+            mvwaddch(name,1,i,' ');
+            mvwaddch(name,2,i,' ');
+            wrefresh(name);
+            wait_nano(9999999);
+        }
 }

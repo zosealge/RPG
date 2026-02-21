@@ -332,25 +332,25 @@ int enemymove(WINDOW *screen,struct enemy *en)
     }
 }
 
-void enemyinit(struct enemy *en,int n)
+void enemyinit(struct enemy *en,struct map_data *da,int n)
 {
     if(n==0)
     {
         en->symb='%';
         en->health=100;
         en->dir=1;
-        en->ey=20;
-        en->ex=20;
+        en->ey=da->en0_y;
+        en->ex=da->en0_x;
         en->is_dead=false;
         en->is_shooting=false;
     }
     else if(n==1)
     {
-        en->symb='K';
+        en->symb='$';
         en->health=100;
         en->dir=1;
-        en->ey=25;
-        en->ex=27;
+        en->ey=da->en1_y;
+        en->ex=da->en1_x;
         en->is_dead=false;
         en->is_shooting=false;
     }

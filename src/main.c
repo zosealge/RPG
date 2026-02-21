@@ -57,6 +57,7 @@ long wait_nano(long a);
 #include"enemy.h"
 #include"player.h"
 #include"menu.h"
+#include"init.h"
 
 int main(void)
 {
@@ -67,27 +68,7 @@ int main(void)
     noqiflush();
     curs_set(0); // change when rendering map will be in place
     start_color();
-            init_pair(1,  COLOR_RED,     COLOR_BLACK);      // ROAD r
-            init_pair(2,  COLOR_MAGENTA, COLOR_GREEN);      // BUSH #
-            init_pair(3,  COLOR_GREEN,   COLOR_GREEN);      // GRASS g
-            init_pair(4,  COLOR_BLUE,    COLOR_BLACK);      // PLAYER @
-            init_pair(5,  COLOR_MAGENTA, COLOR_MAGENTA);    // STONE s (soild wall)
-            init_pair(6,  COLOR_BLUE,    COLOR_BLUE);       // WATER w
-            init_pair(7,  COLOR_YELLOW,  COLOR_RED);        // DIRT d (destructable wall)
-            init_pair(8,  COLOR_RED,     COLOR_BLACK);      // MANA (* - x) particle     
-            init_pair(9,  COLOR_GREEN,   COLOR_BLACK);      // TREE T
-            init_pair(10, COLOR_BLUE,    COLOR_GREEN);      // on grass - player/enemy backgrounds
-            init_pair(11, COLOR_YELLOW,  COLOR_BLACK);
-            init_pair(12, COLOR_RED,     COLOR_BLACK);
-            init_pair(13, COLOR_GREEN,   COLOR_BLACK);
-            init_pair(14, COLOR_MAGENTA, COLOR_BLACK);
-            init_pair(15, COLOR_BLUE,    COLOR_BLACK);
-            init_pair(16, COLOR_YELLOW,  COLOR_BLACK);
-            init_pair(17, COLOR_RED,     COLOR_BLACK);
-            init_pair(18, COLOR_GREEN,   COLOR_BLACK);
-            init_pair(19, COLOR_MAGENTA, COLOR_BLACK);
-            init_pair(20, COLOR_BLUE,    COLOR_BLACK);
-    //                  
+    initrpgcolor();             
     const long WAIT_60HZ=16666666;
     bool gameloop=false;
     bool menupause=false;
@@ -160,7 +141,7 @@ int main(void)
     // start game loop after this point -----------------------------------------------
     // --------------------------------------------------------------------------------
     // --------------------------------------------------------------------------------
-    draw_ret=readmap(pMapdata,pMaparr,(pMapdata->file_name));
+    draw_ret=readmap(pMapdata,pMaparr);
     if(draw_ret==1)
     {
         goto goto_error;
@@ -181,11 +162,11 @@ int main(void)
             wrefresh(map);
             wait_sec(1);
         }
-    drawmap(map,pMaparr);
+    drawmap(map,pMaparr,pMapdata);
     pl_y=pMapdata->st_y;
     pl_x=pMapdata->st_x;
-    enemyinit(enem0,0);
-    enemyinit(enem1,1);
+    enemyinit(enem0,pMapdata,0);
+    enemyinit(enem1,pMapdata,1);
     //init game window after this point
     gameloop=true;
     box(stats,0,0);
@@ -222,6 +203,8 @@ int main(void)
                 pl_symb=mvwinch(map,pl_y-1,pl_x);
                 if(pl_symb==4194417) break;
                 else if(pl_symb==547) break;
+                else if(pl_symb==2388) break;
+                else if(pl_symb==1395) break;
                 else if(pl_symb==2090)
                 {
                     play0.mana++;
@@ -237,6 +220,8 @@ int main(void)
                 pl_symb=mvwinch(map,pl_y+1,pl_x);
                 if(pl_symb==4194417) break;
                 else if(pl_symb==547) break;
+                else if(pl_symb==2388) break;
+                else if(pl_symb==1395) break;
                 else if(pl_symb==2090)
                 {
                     play0.mana++;
@@ -252,6 +237,8 @@ int main(void)
                 pl_symb=mvwinch(map,pl_y,pl_x-1);
                 if(pl_symb==4194424) break;
                 else if(pl_symb==547) break;
+                else if(pl_symb==2388) break;
+                else if(pl_symb==1395) break;
                 else if(pl_symb==2090)
                 {
                     play0.mana++;
@@ -267,6 +254,8 @@ int main(void)
                 pl_symb=mvwinch(map,pl_y,pl_x+1);
                 if(pl_symb==4194424) break;
                 else if(pl_symb==547) break;
+                else if(pl_symb==2388) break;
+                else if(pl_symb==1395) break;
                 else if(pl_symb==2090)
                 {
                     play0.mana++;
@@ -348,6 +337,17 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
+                else if(f_ball_symb==547)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                    mvwaddch(map,f_ball_y,f_ball_x-1,' ');
+                }
+                else if(f_ball_symb==1395)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
                 else if(f_ball_symb==2388)
                 {
                     fireball=false;
@@ -359,7 +359,7 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
-                else if(f_ball_symb==75)
+                else if(f_ball_symb==36)
                 {
                     enem1->is_dead=true;
                     fireball=false;
@@ -377,6 +377,17 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
+                else if(f_ball_symb==547)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                    mvwaddch(map,f_ball_y,f_ball_y-1,' ');
+                }
+                else if(f_ball_symb==1395)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
                 else if(f_ball_symb==2388)
                 {
                     fireball=false;
@@ -388,7 +399,13 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
-                else if(f_ball_symb==75)
+                else if(f_ball_symb==37)
+                {
+                    enem0->is_dead=true;
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
+                else if(f_ball_symb==36)
                 {
                     enem1->is_dead=true;
                     fireball=false;
@@ -406,6 +423,17 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
+                else if(f_ball_symb==547)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                    mvwaddch(map,f_ball_y,f_ball_y+1,' ');
+                }
+                else if(f_ball_symb==1395)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
                 else if(f_ball_symb==2388)
                 {
                     fireball=false;
@@ -417,7 +445,13 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
-                else if(f_ball_symb==75)
+                else if(f_ball_symb==37)
+                {
+                    enem0->is_dead=true;
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
+                else if(f_ball_symb==36)
                 {
                     enem1->is_dead=true;
                     fireball=false;
@@ -435,6 +469,17 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
+                else if(f_ball_symb==547)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                    mvwaddch(map,f_ball_y,f_ball_x+1,' ');
+                }
+                else if(f_ball_symb==1395)
+                {
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
                 else if(f_ball_symb==2388)
                 {
                     fireball=false;
@@ -446,7 +491,13 @@ int main(void)
                     fireball=false;
                     mvwaddch(map,f_ball_y,f_ball_x,' ');
                 }
-                else if(f_ball_symb==75)
+                else if(f_ball_symb==37)
+                {
+                    enem0->is_dead=true;
+                    fireball=false;
+                    mvwaddch(map,f_ball_y,f_ball_x,' ');
+                }
+                else if(f_ball_symb==36)
                 {
                     enem1->is_dead=true;
                     fireball=false;
@@ -538,7 +589,7 @@ int main(void)
             //mvwaddch(stats,1,1,' ');
             //wrefresh(stats);
             nodelay(map,false); // stop the loop before next tick
-            draw_ret=readmap(pMapdata,pMaparr,(pMapdata->file_name));
+            draw_ret=readmap(pMapdata,pMaparr);
             if(draw_ret==1)
             {
                 goto goto_error;
@@ -562,14 +613,14 @@ int main(void)
                 wait_sec(1);
             }
             //
-            drawmap(map,pMaparr);
+            drawmap(map,pMaparr,pMapdata);
             play0.health=100;
             play0.mana=0;
             pl_y=pMapdata->st_y;
             pl_x=pMapdata->st_x;
             //enemy initialization
-            enemyinit(enem0,0);
-            enemyinit(enem1,1);
+            enemyinit(enem0,pMapdata,0);
+            enemyinit(enem1,pMapdata,1);
             isenemy0_dead=false;
             isenemy1_dead=false;
             //init game window after this point
