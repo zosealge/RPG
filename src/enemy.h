@@ -354,4 +354,24 @@ void enemyinit(struct enemy *en,struct map_data *da,int n)
         en->is_dead=false;
         en->is_shooting=false;
     }
+    else if(n==2)
+    {
+        en->symb='&';
+        en->health=100;
+        en->dir=1;
+        en->ey=da->en2_y;
+        en->ex=da->en2_x;
+        en->is_dead=false;
+        en->is_shooting=false;
+    }
+    else if(n==3)
+    {
+        en->symb='!';
+        en->health=100;
+        en->dir=1;
+        en->ey=da->en3_y;
+        en->ex=da->en3_x;
+        en->is_dead=false;
+        en->is_shooting=false;
+    }
 }

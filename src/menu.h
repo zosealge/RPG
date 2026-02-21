@@ -461,7 +461,7 @@ void welcomescreen(void)
     int i=11;
     WINDOW *w;
     w=newwin(30,100,0,0);
-    mvwaddstr(w,13,2,"v0.3.2");
+    mvwaddstr(w,13,2,"v0.3.5");
     mvwaddstr(w,14,2,"Press any key to continue");
     mvwaddstr(w,17,2," shoot         move  ");
     mvwaddstr(w,18,2,"fireballs       with ");
@@ -487,24 +487,25 @@ void welcomescreen(void)
             default: //use for resize try
             break;
         }
+
             //ANIMATION YAAAY
         wattron(w,COLOR_PAIR(i));
-        mvwaddstr(w,3, 2,"        ####                      x  ");
+        mvwaddstr(w,3, 2,"       ## RRRRRR   PPPPPPPP   GGGGGG  ##");
         wattroff(w,COLOR_PAIR(i));
         wattron(w,COLOR_PAIR(i+1));
-        mvwaddstr(w,4, 2,"        #  ##                    x   ");
+        mvwaddstr(w,4, 2,"     ####  RR  RR    PP   PP GG    GG ####");
         wattroff(w,COLOR_PAIR(i+1));
         wattron(w,COLOR_PAIR(i+2));
-        mvwaddstr(w,5, 2,"        ####   #####  ##        x    ");
+        mvwaddstr(w,5, 2," <=######  RRRRR     PPPPPP  GG       ######");
         wattroff(w,COLOR_PAIR(i+2));
         wattron(w,COLOR_PAIR(i+3));
-        mvwaddstr(w,6, 2,"        #  #    #  # #         x     ");
+        mvwaddstr(w,6, 2,"   ######  RR  RR    PP      GG  GGGG ######=>");
         wattroff(w,COLOR_PAIR(i+3));
         wattron(w,COLOR_PAIR(i+3));
-        mvwaddstr(w,7, 2,"        #  #    ###  #   #   dxb     ");
+        mvwaddstr(w,7, 2,"     ####  RR   RR   PP      GG    GG ####");
         wattroff(w,COLOR_PAIR(i+3));
         wattron(w,COLOR_PAIR(i+4));
-        mvwaddstr(w,8, 2,"        #  ###  #     ####   x       ");
+        mvwaddstr(w,8, 2,"       ## RRRR   RR PPPP      GGGGGG  ##");
         wattroff(w,COLOR_PAIR(i+4));
         if(welcome_screen)
         {
@@ -525,7 +526,7 @@ void editorscreen(void)
     int i=11;
     WINDOW *w;
     w=newwin(30,100,0,0);
-    mvwaddstr(w,13,2,"v0.1.9");
+    mvwaddstr(w,13,2,"v0.2.0");
     mvwaddstr(w,14,2,"Press any key to continue");
     mvwaddstr(w,17,2," erase        move  ");
     mvwaddstr(w,18,2,"  stuff        with ");
@@ -628,8 +629,10 @@ void showhelp(void)
      mvwaddch(h,9,1,33);
     mvwaddstr(h,9,3,"- [T] set 4th enemy position");
 
-    mvwaddstr(h,11,1,"Press key in bracket");
-    mvwaddstr(h,12,1,"to place element on map.");
+    mvwaddstr(h,11,1,"[SPACE] Empty");
+    mvwaddstr(h,12,1,"[BACKSPACE] Erase");
+    mvwaddstr(h,14,1,"Press key in bracket");
+    mvwaddstr(h,15,1,"to place element on map.");
     mvwaddstr(h,18,1,"Press any key to continue");
     do
     {

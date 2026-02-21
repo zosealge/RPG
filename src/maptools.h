@@ -1,3 +1,15 @@
+                            /*
+                            r 370
+                            # 547
+                            g 871
+                            @ 1088
+                            s 1395
+                            w 1655
+                            d 1892
+                            * 2090
+                            T 2388
+                            */
+
 #define MY 26
 #define MX 100
 
@@ -91,18 +103,6 @@ int drawmap(WINDOW *map,int **d,struct map_data *data0)
         wrefresh(map);
         wait_nano(19999999);
     }
-
-                            /*
-                            r 370
-                            # 547
-                            g 871
-                            @ 1088
-                            s 1395
-                            w 1655
-                            d 1892
-                            * 2090
-                            T 2388
-                            */
     wrefresh(map);
     return 0;
 }
