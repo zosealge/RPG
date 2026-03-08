@@ -15,26 +15,54 @@
 
 int readmap(struct map_data *data0,int **d)
 {
+    struct map_header
+    {
+        uint8_t pl_y_pos;
+        uint8_t pl_x_pos;
+        uint8_t en0_y_pos;
+        uint8_t en0_x_pos;
+        uint8_t en1_y_pos;
+        uint8_t en1_x_pos;
+        uint8_t en2_y_pos;
+        uint8_t en2_x_pos;
+        uint8_t en3_y_pos;
+        uint8_t en3_x_pos;
+    };
+    struct map_board
+    {
+        uint8_t y;
+        uint8_t x;
+        uint8_t tile;
+    };
+    struct map_header *mh=malloc(sizeof(struct map_header));
+    if(mh==NULL)
+    {
+        return -2;
+    }
+    struct map_board *mb=malloc(sizeof(struct map_board));
+    if(mb==NULL)
+    {
+        return -2;
+    }
     const char *map_folder="maps";
+    const int RW_SIZE=1;
     char path[24];
-    char buffer[64];
-    int ch;
-    int y_i;
-    int x_i;
-    int sy;
-    int sx;
     int y;
     int x;
+    int rc;
     FILE *mapfile;
     strncpy(path,map_folder,5);
     strncat(path,"/",2);
     strncat(path,data0->file_name,12);
-    mapfile=fopen(path,"r");
+    mapfile=fopen(path,"rb");
     if(mapfile==NULL) return 1;
-    fgets(buffer,64,mapfile);
-    sscanf(buffer,"%d %d",&sy,&sx);
-    data0->st_y=sy;
-    data0->st_x=sx;
+    rc=fread(mh,sizeof(struct map_header),RW_SIZE,mapfile);
+    if(rc<0)
+    {
+        return -2;
+    }
+    data0->st_y=mh->pl_y_pos;
+    data0->st_x=mh->pl_x_pos;
     //fill memory with zeros to not show garbage data
     for(y=0;y<MY;y++)
     {
@@ -44,19 +72,14 @@ int readmap(struct map_data *data0,int **d)
         }
         x=0;
     }
-    //map_maxy map_maxx pl_st_y pl_st_x - map file structure
-    //030 030 005 005
     while(!feof(mapfile))
     {
-            //chars stored as int
-            //y   x   int
-            //005 006 026
-            //
-            fgets(buffer,24,mapfile);
-            sscanf(buffer,"%d %d %d",&y_i,&x_i,&ch);
-            d[y_i][x_i]=ch;
+            rc=fread(mb,sizeof(struct map_board),RW_SIZE,mapfile);
+            d[mb->y][mb->x]=mb->tile;
     }
     fclose(mapfile);
+    free(mh);
+    free(mb);
     return 0;
 }
 
@@ -109,7 +132,37 @@ int drawmap(WINDOW *map,int **d,struct map_data *data0)
 
 int savemap(WINDOW *map,struct map_data *data0)
 {
+    struct map_header
+    {
+        uint8_t pl_y_pos;
+        uint8_t pl_x_pos;
+        uint8_t en0_y_pos;
+        uint8_t en0_x_pos;
+        uint8_t en1_y_pos;
+        uint8_t en1_x_pos;
+        uint8_t en2_y_pos;
+        uint8_t en2_x_pos;
+        uint8_t en3_y_pos;
+        uint8_t en3_x_pos;
+    };
+    struct map_board
+    {
+        uint8_t y;
+        uint8_t x;
+        uint8_t tile;
+    };
+    struct map_header *mh=malloc(sizeof(struct map_header));
+    if(mh==NULL)
+    {
+        return -2;
+    }
+    struct map_board *mb=malloc(sizeof(struct map_board));
+    if(mb==NULL)
+    {
+        return -2;
+    }
     const char *map_folder="maps";
+    const int RW_SIZE=1;
     char path[24];
     int ch;
     int y_i;
@@ -118,26 +171,19 @@ int savemap(WINDOW *map,struct map_data *data0)
     strncpy(path,map_folder,sizeof(&map_folder));
     strcat(path,"/");
     strcat(path,data0->file_name);
-    mapfile=fopen(path,"w");
+    mapfile=fopen(path,"wb");
     if(mapfile==NULL)
     {
         return -1;
     }
     y_i=2;
     x_i=2;
-    //sprintf(buffer,"%3d %3d",data0->st_y,data0->st_x);
-    //header information
-    //001 002
-    //player 
-    //  y   x
-    //
-    //map data
-    //001 002 003
-    //  y   x  ch
-    fprintf(mapfile,"%3d %3d\n",data0->st_y,data0->st_x);
+    memset(mh,0,sizeof(struct map_header));
+    memset(mb,0,sizeof(struct map_board));
+    mh->pl_y_pos=data0->st_y;
+    mh->pl_x_pos=data0->st_x;
+    fwrite(mh,sizeof(struct map_header),RW_SIZE,mapfile);
     wmove(map,y_i,x_i);
-    //end of header write
-    //start read/write loop
     for(y_i=2;y_i<MY;y_i++)
     {
         for(x_i=2;x_i<MX;x_i++)
@@ -150,13 +196,18 @@ int savemap(WINDOW *map,struct map_data *data0)
             else if(ch==2388) ch=84;
             else if(ch<32) continue;
             //else if(ch>126) continue;
-            fprintf(mapfile,"%3d %3d %3d\n",y_i,x_i,ch);
+            mb->y=y_i;
+            mb->x=x_i;
+            mb->tile=ch;
+            fwrite(mb,sizeof(struct map_board),RW_SIZE,mapfile);
             wmove(map,y_i,x_i);
             wrefresh(map);
         }
         x_i=2;
     }
     fclose(mapfile);
+    free(mh);
+    free(mb);
     return 0;
 }
 
