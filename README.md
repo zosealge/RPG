@@ -3,6 +3,9 @@ Simple real-time roguelike RPG made using ncurses
 
 - RPG game version 0.3.6
 - Map Editor version 0.3.1
+
+<img width="1004" height="695" alt="rpg_screenshot" src="https://github.com/user-attachments/assets/aa0abc0f-1d01-463f-8706-3089b69ddaaf" />
+
   
 # COMPILE
 - make rpg - to compile RPG
