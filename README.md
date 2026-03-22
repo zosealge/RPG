@@ -1,8 +1,8 @@
 # RPG
 Simple real-time roguelike RPG made using ncurses
 
-RPG game version 0.3.6
-Map Editor version 0.3.1
+- RPG game version 0.3.6
+- Map Editor version 0.3.1
   
 # COMPILE
 - make rpg - to compile RPG
