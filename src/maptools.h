@@ -173,8 +173,8 @@ int savemap(WINDOW *map,struct map_data *data0)
     int x_i;
     FILE *mapfile;
     strncpy(path,map_folder,sizeof(&map_folder));
-    strcat(path,"/");
-    strcat(path,data0->file_name);
+    strncat(path,"/",2);
+    strncat(path,data0->file_name,12);
     mapfile=fopen(path,"wb");
     if(mapfile==NULL)
     {
