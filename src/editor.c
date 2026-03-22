@@ -1,13 +1,15 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdbool.h>
+#include<stdint.h>
 #include<string.h>
 #include<time.h>
 #include<curses.h>
 #include<dirent.h>
 
-#define MAP_MAX_Y 124
-#define MAP_MAX_X 124
+#define MAP_MAX_SQ 124
+#define NSLEEP(n) nanosleep((const struct timespec[]){{0, (n)}}, NULL)
+#define SSLEEP(n) nanosleep((const struct timespec[]){{(n), 0}}, NULL)
 
 struct map_data
 {
@@ -25,8 +27,38 @@ struct map_data
     // directory name is hardcoded as "maps"
 };
 
-long wait_sec(long a);
-long wait_nano(long a);
+enum global_directions
+{
+    D_LEFT=1,
+    D_UP=2,
+    D_DOWN=3,
+    D_RIGHT=4,
+};
+
+enum key_press
+{
+    KEY_BUTTON_UP=259,
+    KEY_BUTTON_DOWN=258,
+    KEY_BUTTON_RIGHT=261,
+    KEY_BUTTON_LEFT=260,
+    KEY_BUTTON_SPACE=32,
+    KEY_BUTTON_BACKSPACE=263,
+    KEY_BUTTON_TILDE=96,
+    KEY_BUTTON_SEVEN=55,
+    KEY_BUTTON_EIGHT=56,
+    KEY_BUTTON_NINE=57,
+    KEY_BUTTON_ZERO=48,
+    KEY_BUTTON_ONE=49,
+    KEY_BUTTON_Z=122,
+    KEY_BUTTON_X=120,
+    KEY_BUTTON_C=99,
+    KEY_BUTTON_V=118,
+    KEY_BUTTON_Q=113,
+    KEY_BUTTON_W=119,
+    KEY_BUTTON_E=101,
+    KEY_BUTTON_R=114,
+    KEY_BUTTON_T=116
+};
 
 #include"maptools.h"
 #include"menu.h"
@@ -51,7 +83,7 @@ int main(void)
     bool errinit=false;
     bool help=false;
     char errmsg[8];
-    int **pMaparr;
+    uint8_t *pMaparr;
     int menu_ret;
     int newmenu_ret;
     int draw_ret;
@@ -72,7 +104,7 @@ int main(void)
     pMapdata=malloc(sizeof(struct map_data));
     if(pMapdata==NULL)
     {
-        strcpy(errmsg,"RC0001");
+        strncpy(errmsg,"RCM001",sizeof(errmsg));
         goto goto_error;
     }
     newmenu_ret=newmenu(pMapdata);
@@ -80,20 +112,11 @@ int main(void)
     {
         goto goto_clean_exit;
     }
-    pMaparr=malloc(sizeof(int *)*MAP_MAX_Y*MAP_MAX_X);  // does it need to load 124*124 pointers?
-    if(pMaparr==NULL)                                   // or just 124 pointers to navigate on X row
+    pMaparr=malloc((MAP_MAX_SQ*MAP_MAX_SQ)*sizeof(uint8_t));
+    if(pMaparr==NULL)
     {
-        strcpy(errmsg,"RC0001");
+        strncpy(errmsg,"RCM002",sizeof(errmsg));
         goto goto_error;
-    }
-    for(int i=0;i<MAP_MAX_Y;i++)
-    {
-        pMaparr[i]=malloc(sizeof(int)*MAP_MAX_Y*MAP_MAX_X);
-        if(pMaparr[i]==NULL)
-        {
-            strcpy(errmsg,"RC0001");
-            goto goto_error;
-        }
     }
     // start editor loop after this point----------------------------------------------
     // editor uses nodelay(map,false)--------------------------------------------------
@@ -117,7 +140,7 @@ int main(void)
         {
             mvwaddch(map,4,i,'.');
             wrefresh(map);
-            wait_sec(1);
+            SSLEEP(1);
         }
     drawmap(map,pMaparr,pMapdata);
     //init editor window after this point - use "gameloop" name for compatibility
@@ -148,58 +171,41 @@ int main(void)
             STOP!!!!
 
             LOOP IS NOW ENABLED BY nodelay(map,true)
-
-            play0.dir: 1 - left
-                       2 - up
-                       3 - down
-                       4 - right
-
+            
             */
-            case 259: //UP
+            case KEY_BUTTON_UP: //UP
                 pl_y--;
                 //
                 break;
-            case 258: //DOWN
+            case KEY_BUTTON_DOWN: //DOWN
                 pl_y++;
                 //
                 break;
-            case 260: //LEFT
+            case KEY_BUTTON_LEFT: //LEFT
                 pl_x--;
                 //
                 break;
-            case 261: //RIGHT
+            case KEY_BUTTON_RIGHT: //RIGHT
                 pl_x++;
                 //
                 break;
-            case 122: // z - # 547
+            case KEY_BUTTON_Z: // z - # 547
                     mvwaddch(map,pl_y,pl_x,547);
                     pl_x++;
                 break;
-            case 120: // x - s 1395
+            case KEY_BUTTON_X: // x - s 1395
                     mvwaddch(map,pl_y,pl_x,1395);
                     pl_x++;
                 break;
-            case 99: // c - * 2090
+            case KEY_BUTTON_C: // c - * 2090
                     mvwaddch(map,pl_y,pl_x,2090);
                     pl_x++;
                 break;
-            case 118: // v - T 2388
+            case KEY_BUTTON_V: // v - T 2388
                     mvwaddch(map,pl_y,pl_x,2388);
                     pl_x++;
                 break;
-
-            /*
-            int en0_y;
-            int en0_x;
-            int en1_y;
-            int en1_x;
-            int en2_y;
-            int en2_x;
-            int en3_y;
-            int en3_x;
-            */
-
-            case 113: // q - @ 1088
+            case KEY_BUTTON_Q: // q - @ 1088
                     mvwaddch(map,(pMapdata->st_y),(pMapdata->st_x),' ');
                     mvwaddch(map,pl_y,pl_x,1088);
                     pMapdata->st_y=pl_y;
@@ -208,9 +214,9 @@ int main(void)
                     wrefresh(stats);
                     wmove(map,pl_y,pl_x);
                     wrefresh(map);
-                    wait_sec(1);
+                    SSLEEP(1);
                 break;
-            case 119: // w - enemy0 % 37
+            case KEY_BUTTON_W: // w - enemy0 % 37
                     mvwaddch(map,(pMapdata->en0_y),(pMapdata->en0_x),' ');
                     mvwaddch(map,pl_y,pl_x,37);
                     pMapdata->en0_y=pl_y;
@@ -219,9 +225,9 @@ int main(void)
                     wrefresh(stats);
                     wmove(map,pl_y,pl_x);
                     wrefresh(map);
-                    wait_sec(1);
+                    SSLEEP(1);
                 break;
-            case 101: // e - enemy1 $ 36
+            case KEY_BUTTON_E: // e - enemy1 $ 36
                     mvwaddch(map,(pMapdata->en1_y),(pMapdata->en1_x),' ');
                     mvwaddch(map,pl_y,pl_x,36);
                     pMapdata->en1_y=pl_y;
@@ -230,9 +236,9 @@ int main(void)
                     wrefresh(stats);
                     wmove(map,pl_y,pl_x);
                     wrefresh(map);
-                    wait_sec(1);
+                    SSLEEP(1);
                 break;
-            case 114: // r - enemy2 & 38
+            case KEY_BUTTON_R: // r - enemy2 & 38
                     mvwaddch(map,(pMapdata->en2_y),(pMapdata->en2_x),' ');
                     mvwaddch(map,pl_y,pl_x,38);
                     pMapdata->en2_y=pl_y;
@@ -241,9 +247,9 @@ int main(void)
                     wrefresh(stats);
                     wmove(map,pl_y,pl_x);
                     wrefresh(map);
-                    wait_sec(1);
+                    SSLEEP(1);
                 break;
-            case 116: // t - enemy3 ! 33
+            case KEY_BUTTON_T: // t - enemy3 ! 33
                     mvwaddch(map,(pMapdata->en3_y),(pMapdata->en3_x),' ');
                     mvwaddch(map,pl_y,pl_x,33);
                     pMapdata->en3_y=pl_y;
@@ -252,23 +258,23 @@ int main(void)
                     wrefresh(stats);
                     wmove(map,pl_y,pl_x);
                     wrefresh(map);
-                    wait_sec(1);
+                    SSLEEP(1);
                 break;
-            case 263: // backspace
+            case KEY_BUTTON_BACKSPACE: // backspace
                     mvwaddch(map,pl_y,pl_x,' ');
                     pl_x--;
                 break;
-            case 32:
+            case KEY_BUTTON_SPACE:
                     mvwaddch(map,pl_y,pl_x,' ');
                     pl_x++;
                 break;
-            case 49:
+            case KEY_BUTTON_ONE: 
                     help=true;
                 break;
-            case 48: // 0 for emergency exit in debug mode
+            case KEY_BUTTON_ZERO: // 0 for emergency exit in debug mode
                     gameloop=false;
                 break;
-            case 96:
+            case KEY_BUTTON_TILDE:
                     menupause=true;
                 break;
             default:
@@ -356,7 +362,7 @@ int main(void)
 
                 mvwaddch(map,4,i,'.');
                 wrefresh(map);
-                wait_sec(1);
+                SSLEEP(1);
             }
             //
             drawmap(map,pMaparr,pMapdata);
@@ -386,10 +392,6 @@ int main(void)
     //DO NOT MALLOC something in the loop!!!!!
     goto_error: ;
     free(pMapdata);
-    for(int i=0;i<MAP_MAX_Y;i++)
-    {
-        free(pMaparr[i]);
-    }
     free(pMaparr);
     //only clean exit - only use goto after deinitialization everything!!!!!
     goto_clean_exit: ;
@@ -400,22 +402,4 @@ int main(void)
         printf("\nerr= %s\n",errmsg);
     }
     return 0;
-}
-
-long wait_nano(long nano_sec)
-{
-    long a;
-    time_t start = clock();
-    nanosleep((const struct timespec[]){{0, nano_sec}}, NULL);
-    time_t end = clock();
-    return a=end-start;
-}
-
-long wait_sec(long sec)
-{
-    long a;
-    time_t start = clock();
-    nanosleep((const struct timespec[]){{sec, 0}}, NULL);
-    time_t end = clock();
-    return a=end-start;
 }

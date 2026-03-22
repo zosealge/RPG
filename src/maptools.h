@@ -13,7 +13,7 @@
 #define MY 26
 #define MX 100
 
-int readmap(struct map_data *data0,int **d)
+int readmap(struct map_data *data0,uint8_t *d)
 {
     struct map_header
     {
@@ -59,6 +59,8 @@ int readmap(struct map_data *data0,int **d)
     rc=fread(mh,sizeof(struct map_header),RW_SIZE,mapfile);
     if(rc<0)
     {
+        free(mh);
+        free(mb);
         return -2;
     }
     data0->st_y=mh->pl_y_pos;
@@ -68,14 +70,16 @@ int readmap(struct map_data *data0,int **d)
     {
         for(x=0;x<MX;x++)
         {
-            d[y][x]=0;
+            d[y*MAP_MAX_SQ+x]=0;
+            //d[y][x]=0;
         }
         x=0;
     }
     while(!feof(mapfile))
     {
             rc=fread(mb,sizeof(struct map_board),RW_SIZE,mapfile);
-            d[mb->y][mb->x]=mb->tile;
+            d[(mb->y)*MAP_MAX_SQ+(mb->x)]=mb->tile;
+            //d[mb->y][mb->x]=mb->tile;
     }
     fclose(mapfile);
     free(mh);
@@ -83,7 +87,7 @@ int readmap(struct map_data *data0,int **d)
     return 0;
 }
 
-int drawmap(WINDOW *map,int **d,struct map_data *data0)
+int drawmap(WINDOW *map,uint8_t *d,struct map_data *data0)
 {
     int y;
     int x;
@@ -92,29 +96,29 @@ int drawmap(WINDOW *map,int **d,struct map_data *data0)
     {
         for(x=2;x<MX-1;x++)
         {
-             if((d[y][x])==35)  mvwaddch(map,y,x,547);
-        else if((d[y][x])==115) mvwaddch(map,y,x,1395);
-        else if((d[y][x])==42)  mvwaddch(map,y,x,2090);
-        else if((d[y][x])==84)  mvwaddch(map,y,x,2388);
-        else if((d[y][x])==37)
+             if((d[y*MAP_MAX_SQ+x])==35)  mvwaddch(map,y,x,547);
+        else if((d[y*MAP_MAX_SQ+x])==115) mvwaddch(map,y,x,1395);
+        else if((d[y*MAP_MAX_SQ+x])==42)  mvwaddch(map,y,x,2090);
+        else if((d[y*MAP_MAX_SQ+x])==84)  mvwaddch(map,y,x,2388);
+        else if((d[y*MAP_MAX_SQ+x])==37)
         {
             data0->en0_y=y;
             data0->en0_x=x;
             mvwaddch(map,y,x,37);
         }
-        else if((d[y][x])==36)
+        else if((d[y*MAP_MAX_SQ+x])==36)
         {
             data0->en1_y=y;
             data0->en1_x=x;
             mvwaddch(map,y,x,36);
         }
-        else if((d[y][x])==38)
+        else if((d[y*MAP_MAX_SQ+x])==38)
         {
             data0->en2_y=y;
             data0->en2_x=x;
             mvwaddch(map,y,x,38);
         }
-        else if((d[y][x])==33)
+        else if((d[y*MAP_MAX_SQ+x])==33)
         {
             data0->en3_y=y;
             data0->en3_x=x;
@@ -124,7 +128,7 @@ int drawmap(WINDOW *map,int **d,struct map_data *data0)
         }
         x=2;
         wrefresh(map);
-        wait_nano(19999999);
+        NSLEEP(19999999);
     }
     wrefresh(map);
     return 0;
@@ -174,6 +178,8 @@ int savemap(WINDOW *map,struct map_data *data0)
     mapfile=fopen(path,"wb");
     if(mapfile==NULL)
     {
+        free(mh);
+        free(mb);
         return -1;
     }
     y_i=2;
@@ -220,7 +226,7 @@ void redraw(WINDOW *map)
         mvwaddch(map,y,x,2388);
         wrefresh(map);
         wmove(map,y,x);
-        wait_nano(5999999);
+        NSLEEP(5999999);
     }
 
     for(y=1,x=99;y<MY;y++)
@@ -228,7 +234,7 @@ void redraw(WINDOW *map)
         mvwaddch(map,y,x,2388);
         wrefresh(map);
         wmove(map,y,x);
-        wait_nano(5999999);
+        NSLEEP(5999999);
     }
 
     for(y=1,x=1;x<MX;x++)
@@ -236,7 +242,7 @@ void redraw(WINDOW *map)
         mvwaddch(map,y,x,2388);
         wrefresh(map);
         wmove(map,y,x);
-        wait_nano(1999999);
+        NSLEEP(1999999);
     }
 
     for(y=26,x=1;x<MX;x++)
@@ -244,7 +250,7 @@ void redraw(WINDOW *map)
         mvwaddch(map,y,x,2388);
         wrefresh(map);
         wmove(map,y,x);
-        wait_nano(1999999);
+        NSLEEP(1999999);
     }
     wrefresh(map);
 }
@@ -260,7 +266,7 @@ void undraw(WINDOW *map,WINDOW *stats)
             mvwaddch(map,y,x,' ');
         }
         wrefresh(map);
-        wait_nano(9999999);
+        NSLEEP(9999999);
         x=0;
     }
     for(int i=0;i<31;i++)
@@ -269,7 +275,7 @@ void undraw(WINDOW *map,WINDOW *stats)
         mvwaddch(stats,1,i,' ');
         mvwaddch(stats,2,i,' ');
         wrefresh(stats);
-        wait_nano(9999999);
+        NSLEEP(9999999);
     }
 }
 
@@ -281,6 +287,6 @@ void undrawedit(WINDOW *name)
             mvwaddch(name,1,i,' ');
             mvwaddch(name,2,i,' ');
             wrefresh(name);
-            wait_nano(9999999);
+            NSLEEP(9999999);
         }
 }

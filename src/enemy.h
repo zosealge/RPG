@@ -27,8 +27,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
     */
         switch((rand()%50)+1)
         {   //cases 1-10 movement 30-40 atack action
-            case 1: //left
-            en->dir=1;
+            case D_LEFT:
+            en->dir=D_LEFT;
             en->e_symb=mvwinch(screen,en->ey,en->ex-1);
             if((en->e_symb)==4194424) break;
             else if((en->e_symb)==547) break;
@@ -41,8 +41,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
                 mvwaddch(screen,en->ey,en->ex,en->symb);
             }
             break;
-            case 2: //up
-            en->dir=2;
+            case D_UP:
+            en->dir=D_UP;
             en->e_symb=mvwinch(screen,en->ey-1,en->ex);
             if((en->e_symb)==4194417) break;
             else if((en->e_symb)==547) break;
@@ -55,8 +55,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
                 mvwaddch(screen,en->ey,en->ex,en->symb);
             }
             break;
-            case 3: //down
-            en->dir=3;
+            case D_DOWN: //down
+            en->dir=D_DOWN;
             en->e_symb=mvwinch(screen,en->ey+1,en->ex);
             if((en->e_symb)==4194417) break;
             else if((en->e_symb)==547) break;
@@ -69,8 +69,8 @@ int enemymove(WINDOW *screen,struct enemy *en)
                 mvwaddch(screen,en->ey,en->ex,en->symb);
             }
             break;
-            case 4: //right
-            en->dir=4;
+            case D_RIGHT: //right
+            en->dir=D_RIGHT;
             en->e_symb=mvwinch(screen,en->ey,en->ex+1);
             if((en->e_symb)==4194424) break;
             else if((en->e_symb)==547) break;
@@ -101,7 +101,7 @@ int enemymove(WINDOW *screen,struct enemy *en)
             {
                 switch((en->fireball_dir))
                 {
-                    case 1://left x-
+                    case D_LEFT://left x-
                     en->fireball_x-=1;
                     symb=mvwinch(screen,en->fireball_y,en->fireball_x-1);
                     if(symb==4194424)
@@ -146,7 +146,7 @@ int enemymove(WINDOW *screen,struct enemy *en)
                     }
                     break;
 
-                    case 2://up y-
+                    case D_UP://up y-
                     en->fireball_y-=1;
                     symb=mvwinch(screen,en->fireball_y,en->fireball_x);
                     if(symb==4194417)
@@ -192,7 +192,7 @@ int enemymove(WINDOW *screen,struct enemy *en)
                     }
                     break;
 
-                    case 3://down y+
+                    case D_DOWN://down y+
                     en->fireball_y+=1;
                     symb=mvwinch(screen,en->fireball_y,en->fireball_x);
                     if(symb==4194417)
@@ -238,7 +238,7 @@ int enemymove(WINDOW *screen,struct enemy *en)
                     }
                     break;
 
-                    case 4://right x+
+                    case D_RIGHT://right x+
                     en->fireball_x+=1;
                     symb=mvwinch(screen,en->fireball_y,en->fireball_x);
                     if(symb==4194424)
@@ -294,22 +294,22 @@ int enemymove(WINDOW *screen,struct enemy *en)
             mvwaddch(screen,en->ey,en->ex,'*');
             wattroff(screen,COLOR_PAIR(13));
             wrefresh(screen);
-            wait_nano(WAIT_BOOM);
+            NSLEEP(WAIT_BOOM);
             wattron(screen,COLOR_PAIR(12));
             mvwaddch(screen,en->ey,en->ex,'X');
             wattroff(screen,COLOR_PAIR(12));
             wrefresh(screen);
-            wait_nano(WAIT_BOOM);
+            NSLEEP(WAIT_BOOM);
             wattron(screen,COLOR_PAIR(16));
             mvwaddch(screen,en->ey,en->ex,'#');
             wattroff(screen,COLOR_PAIR(16));
             wrefresh(screen);
-            wait_nano(WAIT_BOOM);
+            NSLEEP(WAIT_BOOM);
             wattron(screen,COLOR_PAIR(17));
             mvwaddch(screen,en->ey,en->ex,'o');
             wattroff(screen,COLOR_PAIR(17));
             wrefresh(screen);
-            wait_nano(WAIT_BOOM);
+            NSLEEP(WAIT_BOOM);
             wattron(screen,COLOR_PAIR(20));
             mvwaddch(screen,en->ey,en->ex,'_');
             wattroff(screen,COLOR_PAIR(20));
@@ -319,7 +319,7 @@ int enemymove(WINDOW *screen,struct enemy *en)
                 mvwaddch(screen,en->fireball_y,en->fireball_x,'*');
                 wattroff(screen,COLOR_PAIR(13));
                 wrefresh(screen);
-                wait_nano(WAIT_BOOM);
+                NSLEEP(WAIT_BOOM);
                 wattron(screen,COLOR_PAIR(20));
                 mvwaddch(screen,en->fireball_y,en->fireball_x,'.');
                 wattroff(screen,COLOR_PAIR(20));
@@ -338,7 +338,7 @@ void enemyinit(struct enemy *en,struct map_data *da,int n)
     {
         en->symb='%';
         en->health=100;
-        en->dir=1;
+        en->dir=D_LEFT;
         en->ey=da->en0_y;
         en->ex=da->en0_x;
         en->is_dead=false;
@@ -348,7 +348,7 @@ void enemyinit(struct enemy *en,struct map_data *da,int n)
     {
         en->symb='$';
         en->health=100;
-        en->dir=1;
+        en->dir=D_LEFT;
         en->ey=da->en1_y;
         en->ex=da->en1_x;
         en->is_dead=false;
@@ -358,7 +358,7 @@ void enemyinit(struct enemy *en,struct map_data *da,int n)
     {
         en->symb='&';
         en->health=100;
-        en->dir=1;
+        en->dir=D_LEFT;
         en->ey=da->en2_y;
         en->ex=da->en2_x;
         en->is_dead=false;
@@ -368,7 +368,7 @@ void enemyinit(struct enemy *en,struct map_data *da,int n)
     {
         en->symb='!';
         en->health=100;
-        en->dir=1;
+        en->dir=D_LEFT;
         en->ey=da->en3_y;
         en->ex=da->en3_x;
         en->is_dead=false;

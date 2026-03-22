@@ -17,6 +17,9 @@ showhelp()
 
 */
 
+#define  RPG_VER "v0.3.6"
+#define EDIT_VER "v0.3.1"
+
 int loadmenu(struct map_data *data0);
 int savemenu(struct map_data *data0);
 int yousure(void);
@@ -461,7 +464,7 @@ void welcomescreen(void)
     int i=11;
     WINDOW *w;
     w=newwin(30,100,0,0);
-    mvwaddstr(w,13,2,"v0.3.5");
+    mvwaddstr(w,13,2,RPG_VER);
     mvwaddstr(w,14,2,"Press any key to continue");
     mvwaddstr(w,17,2," shoot         move  ");
     mvwaddstr(w,18,2,"fireballs       with ");
@@ -511,7 +514,7 @@ void welcomescreen(void)
         {
             i++;
             if(i>=17) i=11;
-            wait_nano(WAIT_MENU);
+            NSLEEP(WAIT_MENU);
         }
 
     }
@@ -526,7 +529,7 @@ void editorscreen(void)
     int i=11;
     WINDOW *w;
     w=newwin(30,100,0,0);
-    mvwaddstr(w,13,2,"v0.2.0");
+    mvwaddstr(w,13,2,EDIT_VER);
     mvwaddstr(w,14,2,"Press any key to continue");
     mvwaddstr(w,17,2," erase        move  ");
     mvwaddstr(w,18,2,"  stuff        with ");
@@ -574,7 +577,7 @@ void editorscreen(void)
         {
             i++;
             if(i>=17) i=11;
-            wait_nano(WAIT_MENU);
+            NSLEEP(WAIT_MENU);
         }
 
     }

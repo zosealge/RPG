@@ -2,12 +2,14 @@
 #include<stdlib.h>
 #include<stdbool.h>
 #include<string.h>
+#include<stdint.h>
 #include<time.h>
 #include<curses.h>
 #include<dirent.h>
 
-#define MAP_MAX_Y 124
-#define MAP_MAX_X 124
+#define MAP_MAX_SQ 124
+#define NSLEEP(n) nanosleep((const struct timespec[]){{0, (n)}}, NULL)
+#define SSLEEP(n) nanosleep((const struct timespec[]){{(n), 0}}, NULL)
 
 struct map_data
 {
@@ -52,8 +54,28 @@ struct enemy
     bool is_hit;
 };
 
-long wait_sec(long a);
-long wait_nano(long a);
+enum global_directions
+{
+    D_LEFT=1,
+    D_UP=2,
+    D_DOWN=3,
+    D_RIGHT=4,
+};
+
+enum key_press
+{
+    KEY_BUTTON_UP=259,
+    KEY_BUTTON_DOWN=258,
+    KEY_BUTTON_RIGHT=261,
+    KEY_BUTTON_LEFT=260,
+    KEY_BUTTON_SPACE=32,
+    KEY_BUTTON_TILDE=96,
+    KEY_BUTTON_SEVEN=55,
+    KEY_BUTTON_EIGHT=56,
+    KEY_BUTTON_NINE=57,
+    KEY_BUTTON_ZERO=48
+};
+
 
 #include"maptools.h"
 #include"enemy.h"
@@ -71,7 +93,7 @@ int main(void)
     curs_set(0); // change when rendering map will be in place
     start_color();
     initrpgcolor();             
-    const long WAIT_60HZ=16666666;
+    const long WAIT_60HZ=16666666L;
     bool gameloop=false;
     bool menupause=false;
     bool fireball=false;
@@ -82,7 +104,7 @@ int main(void)
     bool isenemy3_dead=false;
     bool mapreload=false;
     char errmsg[8];
-    int **pMaparr;
+    //int **pMaparr;
     int fireball_ret;
     int menu_ret;
     int newmenu_ret;
@@ -96,36 +118,39 @@ int main(void)
     int pl_y;
     int pl_x;
     int pl_symb;
+
+    uint8_t *pMaparr;
+
     //int f_ball_symb;
     struct map_data *pMapdata;
     struct player *play0=malloc(sizeof(struct player));
     if(play0==NULL)
     {
-        strcpy(errmsg,"RC0001");
+        strncpy(errmsg,"RC0001",sizeof(errmsg));
         goto goto_error;
     }
     struct enemy *enem0=malloc(sizeof(struct enemy));
     if(enem0==NULL)
     {
-        strcpy(errmsg,"RC00A2");
+        strncpy(errmsg,"RC00A2",sizeof(errmsg));
         goto goto_error;
     }
     struct enemy *enem1=malloc(sizeof(struct enemy));
     if(enem1==NULL)
     {
-        strcpy(errmsg,"RC00B2");
+        strncpy(errmsg,"RC00B2",sizeof(errmsg));
         goto goto_error;
     }
     struct enemy *enem2=malloc(sizeof(struct enemy));
     if(enem2==NULL)
     {
-        strcpy(errmsg,"RC00A2");
+        strncpy(errmsg,"RC00A2",sizeof(errmsg));
         goto goto_error;
     }
     struct enemy *enem3=malloc(sizeof(struct enemy));
     if(enem3==NULL)
     {
-        strcpy(errmsg,"RC00B2");
+        strncpy(errmsg,"RC00B2",sizeof(errmsg));
         goto goto_error;
     }
     WINDOW *map, *stats;
@@ -137,9 +162,22 @@ int main(void)
     pMapdata=malloc(sizeof(struct map_data));
     if(pMapdata==NULL)
     {
-        strcpy(errmsg,"RC0010");
+        strncpy(errmsg,"RC0010",sizeof(errmsg));
         goto goto_error;
     }
+    //uint16_t *mem_bg=malloc((MAP_MAX_TILES_SQ*MAP_MAX_TILES_SQ)*sizeof(uint16_t));
+
+    pMaparr=malloc((MAP_MAX_SQ*MAP_MAX_SQ)*sizeof(uint8_t));
+    //defines a pMaparr[y*MAP_MAX_SQ+x] array
+    //can be used without type casting
+    //like map[y*MAP_MAX_SQ+x]=5;
+    //dynamic array need to be equal in y as in x
+    if(pMaparr==NULL)
+    {
+        strncpy(errmsg,"RC0011",sizeof(errmsg));
+        goto goto_error;
+    }
+    /*
     pMaparr=malloc(sizeof(int *)*MAP_MAX_Y*MAP_MAX_X);
     if(pMaparr==NULL)
     {
@@ -155,6 +193,8 @@ int main(void)
             goto goto_error;
         }
     }
+    */
+
     newmenu_ret=newmenu(pMapdata);
     if(newmenu_ret==1)
     {
@@ -182,7 +222,7 @@ int main(void)
         {
             mvwaddch(map,4,i,'.');
             wrefresh(map);
-            wait_sec(1);
+            SSLEEP(1);
         }
     drawmap(map,pMaparr,pMapdata);
     pl_y=pMapdata->st_y;
@@ -219,14 +259,9 @@ int main(void)
 
             LOOP IS NOW ENABLED BY nodelay(map,true)
 
-            play0->dir: 1 - left
-                       2 - up
-                       3 - down
-                       4 - right
-
             */
-            case 259: //UP
-                play0->dir=2;
+            case KEY_BUTTON_UP:
+                play0->dir=D_UP;
                 pl_symb=mvwinch(map,pl_y-1,pl_x);
                 if(pl_symb==4194417) break;
                 else if(pl_symb==547) break;
@@ -242,8 +277,8 @@ int main(void)
                 mvwaddch(map,pl_y,pl_x,play0->symb);
                 wattroff(map,COLOR_PAIR(4));
                 break;
-            case 258: //DOWN
-                play0->dir=3;
+            case KEY_BUTTON_DOWN:
+                play0->dir=D_DOWN;
                 pl_symb=mvwinch(map,pl_y+1,pl_x);
                 if(pl_symb==4194417) break;
                 else if(pl_symb==547) break;
@@ -259,8 +294,8 @@ int main(void)
                 mvwaddch(map,pl_y,pl_x,play0->symb);
                 wattroff(map,COLOR_PAIR(4));
                 break;
-            case 260: //LEFT
-                play0->dir=1;
+            case KEY_BUTTON_LEFT:
+                play0->dir=D_LEFT;
                 pl_symb=mvwinch(map,pl_y,pl_x-1);
                 if(pl_symb==4194424) break;
                 else if(pl_symb==547) break;
@@ -276,8 +311,8 @@ int main(void)
                 mvwaddch(map,pl_y,pl_x,play0->symb);
                 wattroff(map,COLOR_PAIR(4));
                 break;
-            case 261: //RIGHT
-                play0->dir=4;
+            case KEY_BUTTON_RIGHT:
+                play0->dir=D_RIGHT;
                 pl_symb=mvwinch(map,pl_y,pl_x+1);
                 if(pl_symb==4194424) break;
                 else if(pl_symb==547) break;
@@ -293,54 +328,48 @@ int main(void)
                 mvwaddch(map,pl_y,pl_x,play0->symb);
                 wattroff(map,COLOR_PAIR(4));
                 break;
-            case 32: // space key
-                /*
-                       1 - left
-                       2 - up
-                       3 - down
-                       4 - right
-                */
+            case KEY_BUTTON_SPACE: 
                 if(play0->mana==0) break;
                 if(fireball) break;
                 play0->fireball_dir=play0->dir;
                 play0->f_ball_y=pl_y;
                 play0->f_ball_x=pl_x;
-                if(play0->fireball_dir==1)
+                if(play0->fireball_dir==D_LEFT)
                 {
                     play0->f_ball_x--;
                 }
-                else if(play0->fireball_dir==2)
+                else if(play0->fireball_dir==D_UP)
                 {
                     play0->f_ball_y--;
                 }
-                else if(play0->fireball_dir==3)
+                else if(play0->fireball_dir==D_DOWN)
                 {
                     play0->f_ball_y++;
                 }
-                else if(play0->fireball_dir==4)
+                else if(play0->fireball_dir==D_RIGHT)
                 {
                     play0->f_ball_x++;
                 }
                 fireball=true;
                 play0->mana-=1;
                 break;
-                case 57:
+                case KEY_BUTTON_NINE:
                     enem0->is_dead=true;
                     enem1->is_dead=true;
                     enem2->is_dead=true;
                     enem3->is_dead=true;
                 break;
-                case 56:
+                case KEY_BUTTON_EIGHT:
                     play0->health=0;
                 break;
-                case 55:
+                case KEY_BUTTON_SEVEN:
                     play0->mana=99;
                 break;
 
-                case 48:
+                case KEY_BUTTON_ZERO:
                     gameloop=false;
                 break;
-                case 96:
+                case KEY_BUTTON_TILDE:
                     menupause=true;
                 break;
                     default:
@@ -445,7 +474,7 @@ int main(void)
         if(play0->health<=0)
         {
             player_boom_anim(map,pl_y,pl_x);
-            wait_sec(2);
+            SSLEEP(2);
             gameloop=false;
             menu_ret=mainmenu(gameloop,pMapdata);
             if(menu_ret==2)
@@ -492,8 +521,6 @@ int main(void)
         // reload procedure - only use to reload maps on new game
         if(mapreload)
         {
-            //mvwaddch(stats,1,1,' ');
-            //wrefresh(stats);
             nodelay(map,false); // stop the loop before next tick
             draw_ret=readmap(pMapdata,pMaparr);
             if(draw_ret==1)
@@ -516,7 +543,7 @@ int main(void)
 
                 mvwaddch(map,4,i,'.');
                 wrefresh(map);
-                wait_sec(1);
+                SSLEEP(1);
             }
             //
             drawmap(map,pMaparr,pMapdata);
@@ -549,11 +576,10 @@ int main(void)
             nodelay(map,true);  // initialize non ending loop
             mapreload=false;
         }
-        wait_nano(WAIT_60HZ);
+        NSLEEP(WAIT_60HZ);
     }
     while(gameloop);
     //error exit - after this point all malloc data deninitialze
-    //DO NOT MALLOC something in the loop!!!!!
     goto_error: ;
     free(play0);
     free(enem0);
@@ -561,10 +587,6 @@ int main(void)
     free(enem2);
     free(enem3);
     free(pMapdata);
-    for(int i=0;i<MAP_MAX_Y;i++)
-    {
-        free(pMaparr[i]);
-    }
     free(pMaparr);
     //only clean exit - only use goto after deinitialization everything!!!!!
     goto_clean_exit: ;
@@ -575,22 +597,4 @@ int main(void)
         printf("\nerr= %s\n",errmsg);
     }
     return 0;
-}
-
-long wait_nano(long nano_sec)
-{
-    long a;
-    time_t start = clock();
-    nanosleep((const struct timespec[]){{0, nano_sec}}, NULL);
-    time_t end = clock();
-    return a=end-start;
-}
-
-long wait_sec(long sec)
-{
-    long a;
-    time_t start = clock();
-    nanosleep((const struct timespec[]){{sec, 0}}, NULL);
-    time_t end = clock();
-    return a=end-start;
 }

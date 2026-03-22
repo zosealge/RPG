@@ -10,7 +10,7 @@ void player_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1," * ");
     wattroff(screen,COLOR_PAIR(12));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(16));
     mvwaddstr(screen,y-1,x-1,"*X* ");
@@ -18,7 +18,7 @@ void player_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1,"*X*");
     wattroff(screen,COLOR_PAIR(16));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(17));
     mvwaddstr(screen,y-1,x-1,"xxx");
@@ -26,7 +26,7 @@ void player_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1,"xxx");
     wattroff(screen,COLOR_PAIR(17));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(20));
     mvwaddstr(screen,y-1,x-1," . ");
@@ -34,13 +34,13 @@ void player_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1," . ");
     wattroff(screen,COLOR_PAIR(20));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(4));
     mvwaddch(screen,y,x,'_');
     wattroff(screen,COLOR_PAIR(4));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 }
 
 void mana_boom_anim(WINDOW *screen,int y, int x)
@@ -53,7 +53,7 @@ void mana_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1," # ");
     wattroff(screen,COLOR_PAIR(12));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(16));
     mvwaddstr(screen,y-1,x-1,"*X* ");
@@ -61,7 +61,7 @@ void mana_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1,"*X*");
     wattroff(screen,COLOR_PAIR(16));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(17));
     mvwaddstr(screen,y-1,x-1,"xxx");
@@ -69,7 +69,7 @@ void mana_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1,"xxx");
     wattroff(screen,COLOR_PAIR(17));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(20));
     mvwaddstr(screen,y-1,x-1,"   ");
@@ -77,13 +77,13 @@ void mana_boom_anim(WINDOW *screen,int y, int x)
     mvwaddstr(screen,y+1,x-1,"   ");
     wattroff(screen,COLOR_PAIR(20));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 
     wattron(screen,COLOR_PAIR(4));
     mvwaddch(screen,y,x,'_');
     wattroff(screen,COLOR_PAIR(4));
     wrefresh(screen);
-    wait_nano(WAIT_BOOM);
+    NSLEEP(WAIT_BOOM);
 }
 
 // Returns:
@@ -99,32 +99,32 @@ int fireballaction(WINDOW *m,struct player *p)
 {
     int symb;
     mvwaddch(m,p->f_ball_y,p->f_ball_x,' ');
-         if(p->fireball_dir==1) //left
+         if(p->fireball_dir==D_LEFT)
     {
         p->f_ball_x-=1;
         symb=mvwinch(m,p->f_ball_y,p->f_ball_x);
     }
-    else if(p->fireball_dir==2) //up
+    else if(p->fireball_dir==D_UP)
     {
         p->f_ball_y-=1;
         symb=mvwinch(m,p->f_ball_y,p->f_ball_x);
     }
-    else if(p->fireball_dir==3) //down
+    else if(p->fireball_dir==D_DOWN)
     {
         p->f_ball_y+=1;
         symb=mvwinch(m,p->f_ball_y,p->f_ball_x);
     }
-    else if(p->fireball_dir==4) //right
+    else if(p->fireball_dir==D_RIGHT)
     {
         p->f_ball_x+=1;
         symb=mvwinch(m,p->f_ball_y,p->f_ball_x);
     }
     if(symb==32)
     {   
-             if(p->fireball_dir==1) mvwaddch(m,p->f_ball_y,p->f_ball_x,'-');
-        else if(p->fireball_dir==2) mvwaddch(m,p->f_ball_y,p->f_ball_x,'|');
-        else if(p->fireball_dir==3) mvwaddch(m,p->f_ball_y,p->f_ball_x,'|');
-        else if(p->fireball_dir==4) mvwaddch(m,p->f_ball_y,p->f_ball_x,'-');
+             if(p->fireball_dir==D_LEFT)  mvwaddch(m,p->f_ball_y,p->f_ball_x,'-');
+        else if(p->fireball_dir==D_UP)    mvwaddch(m,p->f_ball_y,p->f_ball_x,'|');
+        else if(p->fireball_dir==D_DOWN)  mvwaddch(m,p->f_ball_y,p->f_ball_x,'|');
+        else if(p->fireball_dir==D_RIGHT) mvwaddch(m,p->f_ball_y,p->f_ball_x,'-');
         return 0;
     }
     else if(symb==547)
