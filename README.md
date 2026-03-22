@@ -19,9 +19,8 @@ please use at least 100x30 terminal size - any terminal will do
 # TO DO
 - terminal size detect and prevent from start when too small
 - end game when all enemies are dead
-- bigger maps (out of bounds of terminal size)
-- more collectibles
-- more spells(?)
+- bigger maps with scrolling
+- inventory system
 
 # KNOWN BUGS
 - entering into map selection submenu from entry screen, not selecting map, and exit cause seg fault
