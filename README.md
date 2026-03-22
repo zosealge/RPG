@@ -10,6 +10,8 @@ Map Editor version 0.3.1
 
 written in linux, will compile on MacOS too
 
+ncurses with developer library needed for compilation
+
 windows untested... and fk windows anyway
 
 please use at least 100x30 terminal size - any terminal will do
