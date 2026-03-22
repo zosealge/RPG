@@ -1,26 +1,25 @@
 # RPG
-Simple ASCII RPG Game with enemies, fireballs and... adventure
+Simple real-time roguelike RPG made using ncurses
 
-binaries are compiled on openSUSE Tumbleweed x86_64
-
-RPG game version 0.3.5
-Map Editor version 0.2.0
+RPG game version 0.3.6
+Map Editor version 0.3.1
   
 # COMPILE
 - make rpg - to compile RPG
 - make editor - to compile map editor
 
-written in linux
-
-for macOS change the strncpy for strcpy_s
+written in linux, will compile on MacOS too
 
 windows untested... and fk windows anyway
 
-please use at least 100x30 terminal size
+please use at least 100x30 terminal size - any terminal will do
 
 # TO DO
 - terminal size detect and prevent from start when too small
-- move malloc from load submenu to program initialization section and pass pointer to load submenu
+- end game when all enemies are dead
+- bigger maps (out of bounds of terminal size)
+- more collectibles
+- more spells(?)
 
 # KNOWN BUGS
 - entering into map selection submenu from entry screen, not selecting map, and exit cause seg fault
